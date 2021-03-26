@@ -1,13 +1,9 @@
-PROGRAM = push
-VERSION = 0.0.1
+PROGRAM  = push
+VERSION  = 0.0.1
+DEFINES  = -DVERSION=\"$(VERSION)\" -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
+SOURCES  = main.c term.c lined.c cli.c
 
-DEFINES = -DVERSION=\"$(VERSION)\"
-
-DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
-
-SOURCES = main.c term.c lined.c cli.c
-
-export CC65_HOME=../../cc65/
+export CC65_HOME=../cc65/
 
 ifdef TARGET
 CC       = cl65
@@ -46,10 +42,10 @@ $(BIN): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o $(BIN) $^
 
 mega:
-	../../kickc/bin/kickc.sh -e -p mega65 \
+	../kickc/bin/kickc.sh -e -p mega65    \
 		-DKICKC -DMEGA65 -DHAVE_HINTS       \
+		-DVERSION=\"$(VERSION)\"            \
 		-DNULL=\(\(void*\)0\)               \
-		-DVERSION=\"0.0.1\"                 \
 		main.c
 
 clean:
