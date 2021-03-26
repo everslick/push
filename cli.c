@@ -8,6 +8,10 @@
 
 #ifdef KICKC
 
+#define strncmp xstrncmp
+#define strcmp  xstrcmp
+#define cprintf printf
+
 static const char commands[] = {
   'h','e','l','p', 0,
   'e','c','h','o', 0,
@@ -58,14 +62,16 @@ static int8_t xstrcmp(const char *s1, const char *s2) {
   return (xstrncmp(s1, s2, 255));
 }
 
-static uint8_t parse(char *cmd, char **argv, uint8_t size) {
-  uint8_t argc = 0, args = (size / sizeof (argv[0]));
+static uint8_t parse(char *cmd, char **argv, uint8_t args) {
+  uint8_t i, argc = 0, quote = 0, first = 1;
   char *s = cmd, *t = s + strlen(s) - 1;
-  uint8_t quote = 0, first = 1;
 
   while ((t >= s) && (*t && (*t == ' '))) *t-- = 0; // trim end
 
-  memset(argv, 0, size);
+  //memset(argv, 0, size);
+  for (i=0; i<args; i++) {
+    argv[i] = 0;
+  }
 
   while (*s) {
     if (first) {
@@ -156,12 +162,12 @@ void lined_complete_cb(lined_t *l) {
   // TAB completion requires at least one character
   if (strlen(c) < 1) return;
 
-  if (!xstrncmp(c, "echo", 4)) {
+  if (!strncmp(c, "echo", 4)) {
     lined_completion_add(l, "echo foo bar");
   }
 
   while (*ptr) {
-    if (!xstrncmp(ptr, c, strlen(c))) {
+    if (!strncmp(ptr, c, strlen(c))) {
       lined_completion_add(l, ptr);
     }
 
@@ -177,8 +183,8 @@ const char *term_hint_cb(lined_t *l) {
   // remove all the leading spaces
   while (c && (*c == ' ')) c++;
 
-  if (!xstrcmp(c, "parse")) return ("[<arg1> <arg2> ...]");
-  if (!xstrcmp(c, "echo"))  return ("<text>");
+  if (!strcmp(c, "parse")) return ("[<arg1> <arg2> ...]");
+  if (!strcmp(c, "echo"))  return ("<text>");
 
   return (NULL);
 }
@@ -188,23 +194,23 @@ uint8_t cli_exec(char *cmd) {
   char *argv[8];
   uint8_t argc;
 
-  argc = parse(cmd, argv, sizeof (argv));
+  argc = parse(cmd, argv, 8);
 
   if (argc == 0) return (0);
 
-  if (!xstrcmp(argv[0], "exit") || !xstrcmp(argv[0], "logout")) {
+  if (!strcmp(argv[0], "exit") || !strcmp(argv[0], "logout")) {
     return (1); // exit
-  } else if (!xstrcmp(argv[0], "help")) {
+  } else if (!strcmp(argv[0], "help")) {
     cmd_help(argc, argv);
-  } else if (!xstrcmp(argv[0], "echo")) {
+  } else if (!strcmp(argv[0], "echo")) {
     cmd_echo(argc, argv);
-  } else if (!xstrcmp(argv[0], "parse")) {
+  } else if (!strcmp(argv[0], "parse")) {
     cmd_parse(argc, argv);
-  } else if (!xstrcmp(argv[0], "clear")) {
+  } else if (!strcmp(argv[0], "clear")) {
     cmd_clear(argc, argv);
-  } else if (!xstrcmp(argv[0], "version")) {
+  } else if (!strcmp(argv[0], "version")) {
     cmd_version(argc, argv);
-  } else if (!xstrcmp(argv[0], "uptime")) {
+  } else if (!strcmp(argv[0], "uptime")) {
     cmd_uptime(argc, argv);
   } else {
     cprintf("%s: command not found\r\n", argv[0]);
