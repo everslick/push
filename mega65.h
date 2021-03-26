@@ -1,5 +1,5 @@
-#ifndef _M65_CONIO_H_
-#define _M65_CONIO_H_
+#ifndef _MEGA65_H_
+#define _MEGA65_H_
 
 #define COLOR_BLACK        0
 #define COLOR_WHITE        1
@@ -19,6 +19,8 @@
 #define COLOR_LIGHTBLUE    14
 #define COLOR_GRAY3        15
 
+#define COLOR_DEFAULT      15
+
 #define cprintf printf
 
 void clrscr(void); 
@@ -29,4 +31,4 @@ unsigned char cgetc (void);
 
 void cclear(unsigned char length);
 
-#endif // _M65_CONIO_H_
+#endif // _MEGA65_H_

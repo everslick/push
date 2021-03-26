@@ -69,7 +69,7 @@ typedef struct lined_t {
   completion_t *lc;          /* Current TAB completion vector. */
 #endif
 #ifdef HAVE_HISTORY
-  uint8_t index;             /* The history index we are currently editing. */
+  int8_t index;              /* The history index we are currently editing. */
 #endif
   const char *prompt;        /* Prompt to display. */
 } lined_t;

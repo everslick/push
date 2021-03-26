@@ -8,10 +8,6 @@
 
 #ifdef KICKC
 
-#define strncmp xstrncmp
-#define strcmp  xstrcmp
-#define cprintf printf
-
 static const char commands[] = {
   'h','e','l','p', 0,
   'e','c','h','o', 0,
@@ -43,24 +39,6 @@ static const char commands[] = {
 };
 
 #endif
-
-static int8_t xstrncmp(const char *s1, const char *s2, uint8_t n) {
-  uint8_t i;
-
-  for (i=0; i<n; i++) {
-    if (s1[i] != s2[i]) {
-      return ((s1[i]>s2[i]) ? 1 : -1);
-    }
-
-    if (!s1[i] || !s2[i]) break;
-  }
-
-  return (0);
-}
-
-static int8_t xstrcmp(const char *s1, const char *s2) {
-  return (xstrncmp(s1, s2, 255));
-}
 
 static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
@@ -136,7 +114,11 @@ static void cmd_echo(uint8_t argc, char **argv) {
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
+#ifndef ZX
   cprintf("push, version " VERSION "\r\n");
+#else
+  cprintf("push, version 0.0.0\r\n");
+#endif
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {

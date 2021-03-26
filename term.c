@@ -23,7 +23,9 @@ static void make_beep() {
   fflush(stdout);
 }
 
-#else
+#endif
+
+#if defined(C64) || defined(M65)
 
 //
 // C64, MEGA65, ...
@@ -42,6 +44,26 @@ static void make_beep() {
   bordercolor(COLOR_RED);
   waitvsync();
   waitvsync();
+  bordercolor(COLOR_BLACK);
+}
+
+#endif
+
+#ifdef ZX
+
+//
+// ZX Spectrum
+//
+
+static uint8_t screen_init() {
+  return (1);
+}
+
+static void screen_fini() {
+}
+
+static void make_beep() {
+  bordercolor(COLOR_RED);
   bordercolor(COLOR_BLACK);
 }
 

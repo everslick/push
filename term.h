@@ -5,13 +5,22 @@
 
 #ifdef VT100
  #include "vt100.h"
-#else
- #ifdef MEGA65
-  #include <conio.h>
-  #include "mega65.h"
- #else
-  #include <conio.h>
- #endif
+#endif
+
+#ifdef ZX
+ #include "zxspec.h"
+#endif
+
+#ifdef MEGA65
+ #include "mega65.h"
+#endif
+
+#ifdef HAVE_CONIO
+ #include <conio.h>
+#endif
+
+#ifndef COLOR_DEFAULT
+ #define COLOR_DEFAULT COLOR_GRAY3
 #endif
 
 #include "lined.h"
@@ -69,10 +78,6 @@
 #define TERM_KEY_F10       250
 #define TERM_KEY_F11       251
 #define TERM_KEY_F12       252
-
-#ifndef VT100
-#define COLOR_DEFAULT COLOR_GRAY2
-#endif
 
 uint8_t term_init();
 void    term_fini();
