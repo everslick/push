@@ -29,6 +29,7 @@ uint8_t cgetc(void);
 
 void cclear(uint8_t length);
 
+void togglecase();
 void waitvsync();
 
 #endif // _MEGA65_H_

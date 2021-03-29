@@ -65,6 +65,10 @@ void term_init() {
   cputc(8);
 #endif
 
+#ifdef M65
+  togglecase();
+#endif
+
 #ifdef ZX
   // 32 column mode
   cputc(1);

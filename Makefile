@@ -105,7 +105,7 @@ c64emu: clean c64
 	x64 $(PROGRAM)-c64.prg
 
 m65emu: clean m65
-	xmega65 -besure -prg $(PROGRAM).prg
+	xmega65 -besure -prg main.prg
 
 zxemu: clean zx
 	zesarux --romfile ../48.rom --machine 48k $(PROGRAM)-zx.tap
