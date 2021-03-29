@@ -17,9 +17,7 @@ restart:
   lined = NULL;
   reset = 0;
 
-  if (!term_init()) {
-    printf("push: can't init terminal" LF); return (1);
-  }
+  term_init();
 
   if (!(lined = lined_init())) {
     printf("push: out of memory" LF); return (1);
@@ -33,8 +31,10 @@ restart:
     "     / /_/ / / / /\\__ \\/ /_/ /" LF
     "    / ____/ /_/ /___/ / __  /"    LF
     "   / /    \\____//____/_/ / /"    LF
-    "  /_/ petite un*x shell /_/"   LF LF
+    "  /_/ petite un*x shell /_/"      LF
   );
+
+  gotoxy(0, 7);
 
   lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
 
@@ -66,9 +66,9 @@ restart:
     }
   }
 
-  term_fini();
-
   lined_fini(lined);
+
+  term_fini();
 
 #ifndef KICKC
   if (reset) goto restart;

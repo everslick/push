@@ -72,7 +72,7 @@
 #define TERM_KEY_F7        247
 #define TERM_KEY_F8        248
 
-uint8_t term_init();
+void    term_init();
 void    term_fini();
 
 uint8_t term_get_key(lined_t *l);

@@ -56,11 +56,9 @@ static void show_hint(lined_t *l) {
 // API
 //
 
-uint8_t term_init() {
-  uint8_t ok = 1;
-
+void term_init() {
 #ifdef LINUX
-  ok = linux_init();
+  linux_init();
 #endif
 
 #ifdef C64
@@ -73,17 +71,13 @@ uint8_t term_init() {
   cputc(32);
 #endif
 
-  if (ok) {
-    bordercolor(COLOR_BLACK);
-    bgcolor(COLOR_BLACK);
-    textcolor(COLOR_DEFAULT);
+  bordercolor(COLOR_BLACK);
+  bgcolor(COLOR_BLACK);
+  textcolor(COLOR_DEFAULT);
 
-    cursor(1);
+  cursor(1);
 
-    clrscr();
-  }
-
-  return (ok);
+  clrscr();
 }
 
 void term_fini() {
