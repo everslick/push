@@ -12,6 +12,8 @@
 
 #define COLOR_DEFAULT      4
 
+#define LF "\n"
+
 #include <stdint.h>
 
 void cclear(uint8_t length);

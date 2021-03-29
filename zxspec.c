@@ -9,6 +9,10 @@ static uint8_t cursor_onoff = 0;
 
 static uint8_t color_bg = 0;
 
+void gotoxy(unsigned int x, unsigned int y) {
+  zx_movecursorto(x, y);
+}
+
 uint8_t cursor(uint8_t onoff) {
   uint8_t old = cursor_onoff;
 
@@ -23,8 +27,6 @@ uint8_t bgcolor(uint8_t color) {
   color_bg = color;
 
   zx_setpaper(color);
-  //fputc_cons(17);
-  //fputc_cons(48 + color);
 
   return (old);
 }

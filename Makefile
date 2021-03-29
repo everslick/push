@@ -31,7 +31,7 @@ endif
 
 ifeq ($(SDK),kickc)
 BIN      = $(TARGET).prg
-CFLAGS   = -a
+CFLAGS   = -a -Sc -Si -Wfragment
 DEFINES += -DNULL=\(\(void*\)0\)
 DEFINES += -DKICKC -DHAVE_CONIO
 DEFINES += -DHAVE_HINTS
@@ -57,6 +57,7 @@ endif
 
 ifeq ($(MACHINE),zx)
 CFLAGS  += -pragma-redirect:fputc_cons=fputc_cons_native
+CFLAGS  += -pragma-redirect=CRT_FONT=_font_8x8_bbc_system
 DEFINES += -DZX
 CFLAGS  += -lndos
 SOURCES += zxspec.c

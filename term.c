@@ -67,6 +67,12 @@ uint8_t term_init() {
   cputc(8);
 #endif
 
+#ifdef ZX
+  // 32 column mode
+  cputc(1);
+  cputc(32);
+#endif
+
   if (ok) {
     bordercolor(COLOR_BLACK);
     bgcolor(COLOR_BLACK);
@@ -91,15 +97,7 @@ void term_clear_screen() {
 }
 
 void term_get_screen_size(uint8_t *cols, uint8_t *rows) {
-  int c, r;
-
-  screensize(c, r);
-
-  if (c > 255) c = 255;
-  if (r > 255) r = 255;
-
-  *cols = c;
-  *rows = r;
+  screensize(cols, rows);
 }
 
 /* Rewrite the currently edited line accordingly to the buffer content,
@@ -139,18 +137,22 @@ uint8_t term_get_key(lined_t *l) {
 
   key = c;
 
+#ifdef ZX
+  if (c ==  10) c = TERM_KEY_ENTER;
+#endif
+
+#ifdef C64
   if (c ==  20) c = TERM_KEY_BACKSPACE;
   if (c == 148) c = TERM_KEY_DELETE; // SHIFT-BACKSPACE
   if (c == 131) c = TERM_KEY_TAB;    // SHIFT-ESCAPE
-  if (c ==  94) c = TERM_KEY_HOME;   // PG-DOWN
-  if (c ==  19) c = TERM_KEY_HOME;
-  if (c == 145) c = TERM_KEY_UP;
-  if (c ==  17) c = TERM_KEY_DOWN;
-  if (c == 157) c = TERM_KEY_LEFT;
-  if (c ==  29) c = TERM_KEY_RIGHT;
-  if (c ==  95) c = TERM_KEY_END;
+  if (c ==  94) c = TERM_KEY_CTRL_A; // PG-DOWN
+  if (c ==  19) c = TERM_KEY_CTRL_A; // HOME
+  if (c == 145) c = TERM_KEY_CTRL_P; // UP
+  if (c ==  17) c = TERM_KEY_CTRL_N; // DOWN
+  if (c == 157) c = TERM_KEY_CTRL_B; // LEFT
+  if (c ==  29) c = TERM_KEY_CTRL_F; // RIGHT
+  if (c ==  95) c = TERM_KEY_CTRL_E; // END
 
-#ifdef C64
   if ((c > 96) && (c < 123)) c -= 96;
 #endif
 

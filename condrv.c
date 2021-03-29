@@ -163,9 +163,8 @@ char cgetc(void) {
     return (0);
   }
 
-  if (c ==  10) return (13); // LINEFEED
-  if (c ==  13) return (13); // RETURN
-  if (c == 127) return (20); // BACKSPACE
+  if (c ==  10) return (13); // RETURN
+  if (c == 127) return (8);  // BACKSPACE
   if (c ==  27) { // escape sequence
 
     // read the next two bytes representing the escape sequence.
@@ -183,22 +182,22 @@ char cgetc(void) {
         if (seq[2] == '~') {
           if (seq[1] == '2') return (43);  // INSERT
           if (seq[1] == '3') return (127); // DELETE
-          if (seq[1] == '5') return (145); // PG-UP
-          if (seq[1] == '6') return (17);  // PG_DOWN
+          if (seq[1] == '5') return (1);   // PG-UP
+          if (seq[1] == '6') return (5);   // PG_DOWN
         } else {
 	        if (!read(0, seq+3, 1)) return (0);
         }
       } else {
-        if (seq[1] == 'A') return (145); // UP
-        if (seq[1] == 'B') return (17);  // DOWN
-        if (seq[1] == 'C') return (29);  // RIGHT
-        if (seq[1] == 'D') return (157); // LEFT
-        if (seq[1] == 'H') return (19);  // HOME
-        if (seq[1] == 'F') return (95);  // END
+        if (seq[1] == 'A') return (16); // UP
+        if (seq[1] == 'B') return (14); // DOWN
+        if (seq[1] == 'C') return (6);  // RIGHT
+        if (seq[1] == 'D') return (2);  // LEFT
+        if (seq[1] == 'H') return (1);  // HOME
+        if (seq[1] == 'F') return (5);  // END
       }
     } else if (seq[0] == 'O') { // ESC O sequences
-      if (seq[1] == 'H') return (19); // HOME
-      if (seq[1] == 'F') return (95); // END
+      if (seq[1] == 'H') return (1); // HOME
+      if (seq[1] == 'F') return (5); // END
     }
   }
 

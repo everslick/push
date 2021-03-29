@@ -25,9 +25,9 @@
 
 #include <stdint.h>
 
-void clrscr(void); 
+//void clrscr(void); 
 
-void cputs(const unsigned char *s);
+//void cputs(const unsigned char *s);
 
 uint8_t cgetc(void);
 

@@ -340,32 +340,16 @@ static void edit_move_end(lined_t *l) {
 
 #ifdef HAVE_HISTORY
 
-static char *xstrdup(const char *src) {
-  char *p, *str;
-  int len = 0;
-
-  while (src[len]) len++;
-
-  str = malloc(len + 1);
-  p = str;
-
-  while (*src) *p++ = *src++;
-
-  *p = 0;
-
-  return (str);
-}
-
 /* Substitute the currently edited line with the next or previous history
  * entry as specified by 'dir'. */
 static void edit_history_next(lined_t *l, int8_t dir) {
-  int8_t last = history_len - 1;
+  int8_t last = (int8_t)history_len - 1;
 
   if ((l->flags & LINED_HISTORY) && last > 0) {
     /* Update the current history entry before to
      * overwrite it with the next one. */
     free(history[last - l->index]);
-    history[last - l->index] = xstrdup(l->buf);
+    history[last - l->index] = strdup(l->buf);
 
     /* Show the new entry, NOTE: direction is inverted */
     if (((dir > 0) && (l->index > 0)) || (dir < 0) && (l->index < last)) {
@@ -444,8 +428,7 @@ static uint8_t edit_line(lined_t *l) {
   if (c == TERM_KEY_ENTER) {
 #ifdef HAVE_HISTORY
     if (history_len > 0) {
-      history_len--;
-      free(history[history_len]);
+      free(history[--history_len]);
     }
 #endif
 
@@ -474,8 +457,7 @@ static uint8_t edit_line(lined_t *l) {
     } else {
 #ifdef HAVE_HISTORY
       if (history_len > 0) {
-        history_len--;
-        free(history[history_len]);
+        free(history[--history_len]);
       }
 #endif
 
@@ -501,19 +483,7 @@ static uint8_t edit_line(lined_t *l) {
     edit_history_next(l, -1);
   } else if (c == TERM_KEY_CTRL_N) {
     edit_history_next(l,  1);
-  } else if (c == TERM_KEY_UP) {
-    edit_history_next(l, -1);
-  } else if (c == TERM_KEY_DOWN) {
-    edit_history_next(l,  1);
 #endif
-  } else if (c == TERM_KEY_LEFT) {
-    edit_move_left(l);
-  } else if (c == TERM_KEY_RIGHT) {
-    edit_move_right(l);
-  } else if (c == TERM_KEY_HOME) {
-    edit_move_home(l);
-  } else if (c == TERM_KEY_END) {
-    edit_move_end(l);
   } else if (c == TERM_KEY_CTRL_U) {
     /* delete the whole line. */
     l->buf[0] = 0;
@@ -683,7 +653,7 @@ void lined_completion_add(lined_t *l, const char *str) {
  * for huge histories, but will work well for a few hundred of entries. */
 void lined_history_add(const char *line) {
 #ifdef HAVE_HISTORY
-  char *linecopy = NULL;
+  char *copy = NULL;
 
   if (history_max == 0) return;
 
@@ -702,16 +672,15 @@ void lined_history_add(const char *line) {
   /* Add an heap allocated copy of the line in the history.
    * If we reached the max length, remove the older line. */
 
-  if (!(linecopy = xstrdup(line))) return;
+  if (!(copy = strdup(line))) return;
 
   if (history_len == history_max) {
     free(history[0]);
-    memmove(history, history+1, sizeof (char *) * (history_max - 1));
+    memmove(history, history+1, sizeof (char *) * (history_max-1));
     history_len--;
   }
 
-  history[history_len] = linecopy;
-  history_len++;
+  history[history_len++] = copy;
 #endif
 }
 

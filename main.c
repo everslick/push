@@ -10,7 +10,9 @@ int main() {
   lined_t *lined;
   uint8_t reset;
 
+#ifndef KICKC
 restart:
+#endif
 
   lined = NULL;
   reset = 0;
@@ -68,7 +70,9 @@ restart:
 
   lined_fini(lined);
 
+#ifndef KICKC
   if (reset) goto restart;
+#endif
 
   return (0);
 }
