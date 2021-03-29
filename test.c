@@ -2,6 +2,23 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef M65
+#define POKE(X,Y) (*(unsigned char *)(X))=Y
+#define PEEK(X)   (*(unsigned char *)(X))
+
+uint8_t cgetc(void) {
+  uint8_t k = 0;
+
+  while (!k) {
+    k = PEEK(0xD610);
+  }
+
+  POKE(0xD610, 0);
+
+  return (k);
+}
+#endif
+
 static const char *test = "   echo     this is a  '   foo  ' test  ";
 
 static uint8_t parse(char *cmd, char **argv, uint8_t args) {
@@ -66,7 +83,18 @@ int main() {
 
   xargc = parse(cmd, xargv, 8);
 
+  clrscr();
+  bgcolor(0);
+  textcolor(1);
   list(xargc, xargv);
+
+#ifdef M65
+  uint8_t k = 0;
+
+  if ((k=cgetc())) {
+    printf("key = '%i'\r\n", (int)k);
+  }
+#endif
 
   return (0);
 }

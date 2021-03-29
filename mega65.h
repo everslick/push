@@ -23,6 +23,8 @@
 
 #define cprintf printf
 
+#define LF "\n"
+
 #include <stdint.h>
 
 uint8_t cgetc(void);
