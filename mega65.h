@@ -25,10 +25,6 @@
 
 #include <stdint.h>
 
-//void clrscr(void); 
-
-//void cputs(const unsigned char *s);
-
 uint8_t cgetc(void);
 
 void cclear(uint8_t length);
