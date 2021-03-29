@@ -2,22 +2,22 @@ PROGRAM  = push
 VERSION  = 0.0.1
 SOURCES  = main.c term.c lined.c cli.c
 
-export PATH=../kickc/bin:../z88dk/bin:$(shell echo $$PATH)
+export PATH=../zesarux/src:../kickc/bin:../z88dk/bin:$(shell echo $$PATH)
 export ZCCCFG=../z88dk/lib/config/
 export CC65_HOME=../cc65/
 
 DEFINES  = -DVERSION=\"$(VERSION)\"
 TARGET   = $(PROGRAM)-$(MACHINE)
 
-# nativ
+# native
 ifndef SDK
 CC       = gcc
 BIN      = $(PROGRAM)
 TARGET   = $(PROGRAM)
 CFLAGS   = -MMD -MP -O -g3 -Wno-format-security
+DEFINES += -DGCC -DLINUX
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
-SOURCES += vt100.c
-DEFINES += -DVT100
+SOURCES += condrv.c linux.c
 endif
 
 ifeq ($(SDK),cc65)
@@ -25,47 +25,53 @@ CC       = cl65
 BIN      = $(TARGET).prg
 CFLAGS   = -t $(MACHINE) --create-dep $(<:.c=.d) -O
 LDFLAGS  = -t $(MACHINE) -m $(TARGET).map
+DEFINES += -DCC65 -DHAVE_CONIO
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
 endif
 
 ifeq ($(SDK),kickc)
 BIN      = $(TARGET).prg
+CFLAGS   = -a
 DEFINES += -DNULL=\(\(void*\)0\)
-DEFINES += -DKICKC -DHAVE_HINTS
+DEFINES += -DKICKC -DHAVE_CONIO
+DEFINES += -DHAVE_HINTS
 endif
 
 ifeq ($(SDK),z88dk)
 BIN      = $(TARGET)
-CFLAGS   = -vn -OS3 -O3 -I../z88dk/include/
-DEFINES += -DHAVE_CONIO -DAMALLOC 
+CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include
+CFLAGS  += -L../z88dk/lib
+CFLAGS  += -pragma-define:CLIB_EXIT_STACK_SIZE=0
+CFLAGS  += -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
+DEFINES += -DZ88DK -DHAVE_CONIO -DAMALLOC 
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
-SOURCES  = arg-parser.c
 endif
 
 ifeq ($(MACHINE),c64)
-DEFINES += -DC64 -DHAVE_CONIO
+DEFINES += -DC64
 endif
 
 ifeq ($(MACHINE),mega65)
-DEFINES += -DM65 -DHAVE_CONIO
+DEFINES += -DM65
 endif
 
 ifeq ($(MACHINE),zx)
+CFLAGS  += -pragma-redirect:fputc_cons=fputc_cons_native
 DEFINES += -DZX
-CFLAGS  += -clib=new
-#CFLAGS  += -compiler=sccz80
-#CFLAGS  += -compiler=sdcc
+CFLAGS  += -lndos
+SOURCES += zxspec.c
 endif
 
 ifeq ($(MACHINE),zxn)
 DEFINES += -DZX
-#CFLAGS  += -clib=new
-#CFLAGS  += -compiler=sccz80
-#CFLAGS  += -compiler=sdcc
+SOURCES += zxspec.c
 endif
 
-#zcc +cpm -vn -O3 -clib=new cmdline.c -o cmdline -create-app
-#SO3 --max-allocs-per-node200000 -startup=1 -clib=sdcc_iy -vn -DSPECTRUM_32COL
+ifdef TEST
+PROGRAM = test
+SOURCES = test.c
+SOURCE  = test.c
+endif
 
 ########################################
 
@@ -77,10 +83,10 @@ all: $(TARGET)
 ########################################
 
 kickc:
-	kickc.sh -e -p $(MACHINE) $(DEFINES) -o $(BIN) main.c
+	kickc.sh -p $(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
 z88dk:
-	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) $(SOURCES) -o $(BIN) -create-app
+	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
 zx:
 	$(MAKE) SDK=z88dk MACHINE=zx z88dk
@@ -93,7 +99,18 @@ m65:
 
 c64:
 	$(MAKE) SDK=cc65 MACHINE=c64
+
+c64emu: clean c64
 	x64 $(PROGRAM)-c64.prg
+
+m65emu: clean m65
+	xmega65 -besure -prg $(PROGRAM).prg
+
+zxemu: clean zx
+	zesarux --romfile ../48.rom --machine 48k $(PROGRAM)-zx.tap
+
+zxnemu: clean zxn
+	zesarux --romfile ../next.rom --machine TBBlue $(PROGRAM)-zxn.tap
 
 ########################################
 
@@ -108,9 +125,7 @@ $(TARGET): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o $(BIN) $^
 
 clean:
-	$(RM) *.o *.d *.map *.mem *_CODE.bin *_UNASSIGNED.bin
+	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin
 
 distclean: clean
-	$(RM) $(BIN) *.prg *.tap
-
-
+	$(RM) $(BIN) *.prg *.tap test push-zx

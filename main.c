@@ -1,31 +1,39 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "lined.h"
 #include "term.h"
 #include "cli.h"
 
 int main() {
-  lined_t *lined = lined_init();
+  lined_t *lined;
+  uint8_t reset;
 
-  if (!lined) {
-    cprintf("push: out of memory\r\n"); return (1);
-  }
+restart:
+
+  lined = NULL;
+  reset = 0;
 
   if (!term_init()) {
-    cprintf("push: cant't init terminal\r\n"); return (1);
+    printf("push: can't init terminal" LF); return (1);
   }
 
-  cprintf(
-    "       ____  __  _______ __  __\r\n"
-    "      / __ \\/ / / / ___// / / /\r\n"
-    "     / /_/ / / / /\\__ \\/ /_/ /\r\n"
-    "    / ____/ /_/ /___/ / __  /\r\n"
-    "   / /    \\____//____/_/ / /\r\n"
-    "  /_/ petite un*x shell /_/\r\n\r\n"
-  );
+  if (!(lined = lined_init())) {
+    printf("push: out of memory" LF); return (1);
+  }
 
   lined_prompt(lined, "push:$ ");
+
+  printf(
+    "       ____  __  _______ __  __"  LF
+    "      / __ \\/ / / / ___// / / /" LF
+    "     / /_/ / / / /\\__ \\/ /_/ /" LF
+    "    / ____/ /_/ /___/ / __  /"    LF
+    "   / /    \\____//____/_/ / /"    LF
+    "  /_/ petite un*x shell /_/"   LF LF
+  );
+
   lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
 
   while (1) {
@@ -33,19 +41,25 @@ int main() {
 
     if (key == TERM_KEY_ENTER) {
       char *cmd = lined_line(lined);
+      uint8_t ret;
 
-      cprintf("\r\n");
+      printf(LF);
 
-      if (cli_exec(cmd)) {
+      ret = cli_exec(cmd);
+
+      if (ret == 1) {
         break; // 'exit' or 'logout'
+      } else if (ret == 2) {
+        reset = 1; // reset
+        break;
       }
 
       lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
     } else if (key == TERM_KEY_CTRL_C) {
-      cprintf("break\r\n");
+      printf("break" LF);
       break;
     } else if (key == TERM_KEY_CTRL_D) {
-      cprintf("exit\r\n");
+      printf("exit" LF);
       break;
     }
   }
@@ -53,6 +67,8 @@ int main() {
   term_fini();
 
   lined_fini(lined);
+
+  if (reset) goto restart;
 
   return (0);
 }

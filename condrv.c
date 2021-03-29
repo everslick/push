@@ -1,20 +1,12 @@
-#include <termios.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 
-#include "vt100.h"
+#include "condrv.h"
 
-// TERMINAL ATTRIBUTES
-#define TERM_RESET           0
-#define TERM_BRIGHT          1
-#define TERM_DIM             2
-#define TERM_UNDERLINE       3
-#define TERM_BLINK           4
-#define TERM_REVERSE         7
-#define TERM_HIDDEN          8
-
-static struct termios initial_settings;
+#ifdef printf
+#undef printf
+#endif
 
 static uint8_t cursor_onoff = 0;
 
@@ -22,8 +14,8 @@ static uint8_t color_fg = 0;
 static uint8_t color_bg = 0;
 static uint8_t color_bd = 0;
 
-static uint8_t cursor_x = 1;
-static uint8_t cursor_y = 1;
+static uint8_t cursor_x = 0;
+static uint8_t cursor_y = 0;
 static uint8_t screen_w = 0;
 static uint8_t screen_h = 0;
 
@@ -78,8 +70,11 @@ static uint8_t get_cursor_pos(uint8_t *col, uint8_t *row) {
     return (0);
   }
 
-  *row = r - 1;
-  *col = c - 1;
+  if (r > 255) r = 255;
+  if (c > 255) c = 255;
+
+  *row = r;
+  *col = c;
 
   return (1);
 }
@@ -97,29 +92,6 @@ static uint8_t get_screen_size(uint8_t *cols, uint8_t *rows) {
   set_cursor_pos(col, row);
 
   return (1);
-}
-
-uint8_t vt100_init() {
-	struct termios new_settings;
-                                                                                
-	if (tcgetattr(0, &initial_settings) < 0) return (0);
-
-	new_settings = initial_settings;
-	new_settings.c_lflag &= ~(ICANON | ECHO | ISIG); // Ctrl-C is disabled
-	new_settings.c_cc[VMIN] = 1;
-	new_settings.c_cc[VTIME] = 1;
-
-	tcsetattr(0, TCSANOW, &new_settings);
-
-  if (!get_screen_size(&screen_w, &screen_h)) return (0);
-
-  cursor(cursor_onoff);
-
-  return (1);
-}
-
-void vt100_fini() {
-	tcsetattr(0, TCSANOW, &initial_settings);
 }
 
 void clrscr(void) {
@@ -143,14 +115,29 @@ uint8_t wherey(void) {
 }
 
 void cputs(const char *s) {
-  int len = printf("%s", s);
+  uint8_t in_esc_seq = 0;
+  int len = printf(s);
   fflush(stdout);
 
   for (int i=0; i<len; i++) {
 
          if (s[i] == '\r') cursor_x = 0;
     else if (s[i] == '\n') cursor_y++;
-    else                   cursor_x++;
+    else {
+      if (in_esc_seq) {
+        if ((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z')) {
+          in_esc_seq = 0;
+        }
+      } else {
+        if (s[i] == 27) {
+          in_esc_seq = 1;
+        } else {
+          if (s[i] >= 32 && s[i] < 127) {
+            cursor_x++;
+          }
+        }
+      }
+    }
 
     if (cursor_x >= screen_w) {
       cursor_x = 0;
@@ -234,7 +221,8 @@ uint8_t textcolor(uint8_t color) {
 
   color_fg = color;
 
-  printf("\e[%i;%im", (color == COLOR_WHITE) ? 1 : 0, color + 30);
+  // make COLOR_WHITE bright
+  printf("\e[%i;%im", (color == 7) ? 1 : 0, color + 30);
   fflush(stdout);
 
   return (old);
@@ -266,6 +254,10 @@ void cclear(uint8_t length) {
 }
 
 void screensize(uint8_t *x, uint8_t *y) {
+  if (!screen_w || !screen_h) {
+    get_screen_size(&screen_w, &screen_h);
+  }
+
   *x = screen_w;
   *y = screen_h;
 }
@@ -288,4 +280,8 @@ int vcprintf(const char *format, va_list ap) {
   cputs(buf);
 
   return (ret);
+}
+
+void waitvsync() {
+  usleep(20000);
 }

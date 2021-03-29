@@ -1,5 +1,5 @@
-#ifndef _VT100_H_
-#define _VT100_H_
+#ifndef _LINUX_H_
+#define _LINUX_H_
 
 #define COLOR_BLACK           0
 #define COLOR_RED             1
@@ -12,11 +12,13 @@
 
 #define COLOR_DEFAULT         9
 
+#define printf cprintf
+
 #include <stdint.h>
 
 #include "condrv.h"
 
-uint8_t vt100_init();
-void    vt100_fini();
+uint8_t linux_init();
+void    linux_fini();
 
-#endif // _VT100_H_
+#endif // _LINUX_H_

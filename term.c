@@ -4,74 +4,32 @@
 
 #include "term.h"
 
-#ifdef VT100
+uint8_t osd = 1;
+uint8_t key = 0;
 
-//
-// LINUX
-//
+static void hide_osd(lined_t *l) {
+  uint8_t i, w = l->cols, x = wherex(), y = wherey();
 
-uint8_t screen_init(void) {
-  return (vt100_init());
+  for (i=1; i<6; i++) {
+    gotoxy(w-7, i); cclear(7);
+  }
+
+  gotoxy(x, y);
 }
 
-void screen_fini(void) {
-  vt100_fini();
+static void show_osd(lined_t *l) {
+  uint8_t w = l->cols, h = l->rows, x = wherex(), y = wherey();
+
+  textcolor(COLOR_YELLOW);
+  gotoxy(w-7, 1); cprintf("k =% 4i", key);
+  gotoxy(w-7, 2); cprintf("x =% 4i", x);
+  gotoxy(w-7, 3); cprintf("y =% 4i", y);
+  gotoxy(w-7, 4); cprintf("w =% 4i", w);
+  gotoxy(w-7, 5); cprintf("h =% 4i", h);
+  textcolor(COLOR_DEFAULT);
+
+  gotoxy(x, y);
 }
-
-static void make_beep() {
-  printf("\x7");
-  fflush(stdout);
-}
-
-#endif
-
-#if defined(C64) || defined(M65)
-
-//
-// C64, MEGA65, ...
-//
-
-static uint8_t screen_init() {
-  cputc(8);
- 
-  return (1);
-}
-
-static void screen_fini() {
-}
-
-static void make_beep() {
-  bordercolor(COLOR_RED);
-  waitvsync();
-  waitvsync();
-  bordercolor(COLOR_BLACK);
-}
-
-#endif
-
-#ifdef ZX
-
-//
-// ZX Spectrum
-//
-
-static uint8_t screen_init() {
-  return (1);
-}
-
-static void screen_fini() {
-}
-
-static void make_beep() {
-  bordercolor(COLOR_RED);
-  bordercolor(COLOR_BLACK);
-}
-
-#endif
-
-//
-// COMMON
-//
 
 static void show_hint(lined_t *l) {
 #ifdef HAVE_HINTS
@@ -99,7 +57,15 @@ static void show_hint(lined_t *l) {
 //
 
 uint8_t term_init() {
-  uint8_t ok = screen_init();
+  uint8_t ok = 1;
+
+#ifdef LINUX
+  ok = linux_init();
+#endif
+
+#ifdef C64
+  cputc(8);
+#endif
 
   if (ok) {
     bordercolor(COLOR_BLACK);
@@ -107,6 +73,7 @@ uint8_t term_init() {
     textcolor(COLOR_DEFAULT);
 
     cursor(1);
+
     clrscr();
   }
 
@@ -114,7 +81,9 @@ uint8_t term_init() {
 }
 
 void term_fini() {
-  screen_fini();
+#ifdef LINUX
+  linux_fini();
+#endif
 }
 
 void term_clear_screen() {
@@ -122,7 +91,15 @@ void term_clear_screen() {
 }
 
 void term_get_screen_size(uint8_t *cols, uint8_t *rows) {
-  screensize(cols, rows);
+  int c, r;
+
+  screensize(c, r);
+
+  if (c > 255) c = 255;
+  if (r > 255) r = 255;
+
+  *cols = c;
+  *rows = r;
 }
 
 /* Rewrite the currently edited line accordingly to the buffer content,
@@ -146,15 +123,21 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
   /* Write the hint if any */
   show_hint(l);
 
+  /* Show the OSD if enabled. */
+  if (osd) show_osd(l);
+
   /* Erase to right */
-  cclear(l->cols - wherex() - 1);
+  i = (osd && (wherey() > 0) && wherey() < 6) ? 7 : 0;
+  cclear((l->cols - wherex()) - i - 1);
 
   /* Move cursor to original position */
   gotoxy(pos + l->plen, y);
 }
 
-uint8_t term_get_key() {
+uint8_t term_get_key(lined_t *l) {
   uint8_t c = cgetc();
+
+  key = c;
 
   if (c ==  20) c = TERM_KEY_BACKSPACE;
   if (c == 148) c = TERM_KEY_DELETE; // SHIFT-BACKSPACE
@@ -167,9 +150,17 @@ uint8_t term_get_key() {
   if (c ==  29) c = TERM_KEY_RIGHT;
   if (c ==  95) c = TERM_KEY_END;
 
-#ifndef VT100
+#ifdef C64
   if ((c > 96) && (c < 123)) c -= 96;
 #endif
+
+  if (c == TERM_KEY_CTRL_O) {
+    osd ^= 1;
+
+    if (!osd) hide_osd(l);
+  }
+
+  if (osd) show_osd(l);
 
   return (c);
 }
@@ -177,5 +168,12 @@ uint8_t term_get_key() {
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
 void term_make_beep() {
-  make_beep();
+#ifndef LINUX
+  bordercolor(COLOR_RED);
+  waitvsync(); waitvsync();
+  bordercolor(COLOR_BLACK);
+#else
+  printf("\x7");
+  fflush(stdout);
+#endif
 }

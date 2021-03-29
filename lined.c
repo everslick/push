@@ -340,6 +340,22 @@ static void edit_move_end(lined_t *l) {
 
 #ifdef HAVE_HISTORY
 
+static char *xstrdup(const char *src) {
+  char *p, *str;
+  int len = 0;
+
+  while (src[len]) len++;
+
+  str = malloc(len + 1);
+  p = str;
+
+  while (*src) *p++ = *src++;
+
+  *p = 0;
+
+  return (str);
+}
+
 /* Substitute the currently edited line with the next or previous history
  * entry as specified by 'dir'. */
 static void edit_history_next(lined_t *l, int8_t dir) {
@@ -349,7 +365,7 @@ static void edit_history_next(lined_t *l, int8_t dir) {
     /* Update the current history entry before to
      * overwrite it with the next one. */
     free(history[last - l->index]);
-    history[last - l->index] = strdup(l->buf);
+    history[last - l->index] = xstrdup(l->buf);
 
     /* Show the new entry, NOTE: direction is inverted */
     if (((dir > 0) && (l->index > 0)) || (dir < 0) && (l->index < last)) {
@@ -416,7 +432,7 @@ static void edit_delete_prev_word(lined_t *l) {
  *
  * The function returns the code of the last pressed key. */
 static uint8_t edit_line(lined_t *l) {
-  uint8_t c = term_get_key();
+  uint8_t c = term_get_key(l);
 
   if (c == TERM_KEY_NONE) return (TERM_KEY_NONE);
 
@@ -521,16 +537,10 @@ static uint8_t edit_line(lined_t *l) {
   } else if (c == TERM_KEY_CTRL_W) {
     /* delete previous word */
     edit_delete_prev_word(l);
-  } else if (c == TERM_KEY_INSERT) {
-    /* ignored */
-  } else if (c == TERM_KEY_PAGEUP) {
-    /* ignored */
-  } else if (c == TERM_KEY_PAGEDOWN) {
-    /* ignored */
-  } else if ((c == 0) || (c == '\r')) {
-    /* ignored */
   } else {
-    edit_insert(l, c);
+    if (c >= 32 && c < 127) {
+      edit_insert(l, c);
+    }
   }
 
   return (TERM_KEY_NONE);
@@ -579,7 +589,6 @@ void lined_reset(lined_t *l, uint8_t flags) {
   l->buf[0] = 0;
   l->pos    = 0;
   l->len    = 0;
-  l->plen   = (uint8_t)strlen(l->prompt);
   l->flags  = flags;
 
   if ((l->cols == 0) || (l->rows == 0)) {
@@ -594,6 +603,7 @@ void lined_reset(lined_t *l, uint8_t flags) {
 
 void lined_prompt(lined_t *l, const char *prompt) {
   l->prompt = prompt;
+  l->plen   = (uint8_t)strlen(l->prompt);
 }
 
 void lined_resize(lined_t *l, uint8_t w, uint8_t h) {
@@ -692,7 +702,7 @@ void lined_history_add(const char *line) {
   /* Add an heap allocated copy of the line in the history.
    * If we reached the max length, remove the older line. */
 
-  if (!(linecopy = strdup(line))) return;
+  if (!(linecopy = xstrdup(line))) return;
 
   if (history_len == history_max) {
     free(history[0]);

@@ -15,11 +15,7 @@ int8_t strncmp(const char *s1, const char *s2, uint8_t n) {
 }
 
 int8_t strcmp(const char *s1, const char *s2) {
-  return (xstrncmp(s1, s2, 255));
-}
-
-
-void waitvsync() {
+  return (strncmp(s1, s2, 255));
 }
 
 char cgetc(void) {
@@ -30,4 +26,7 @@ void cclear(uint8_t length) {
   uint8_t i;
 
   for (i=0; i<length; i++) cputc(' ');
+}
+
+void waitvsync() {
 }

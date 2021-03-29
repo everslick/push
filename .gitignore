@@ -1,4 +1,7 @@
 *.d
 *.o
 *.mem
+*.map
+*.prg
+*.tap
 push

@@ -3,15 +3,19 @@
 
 #include <stdint.h>
 
-#ifdef VT100
- #include "vt100.h"
+#ifdef LINUX
+ #include "linux.h"
+#endif
+
+#ifdef C64
 #endif
 
 #ifdef ZX
  #include "zxspec.h"
+ #define LF "\n"
 #endif
 
-#ifdef MEGA65
+#ifdef M65
  #include "mega65.h"
 #endif
 
@@ -21,6 +25,10 @@
 
 #ifndef COLOR_DEFAULT
  #define COLOR_DEFAULT COLOR_GRAY3
+#endif
+
+#ifndef LF
+ #define LF "\r\n"
 #endif
 
 #include "lined.h"
@@ -82,7 +90,7 @@
 uint8_t term_init();
 void    term_fini();
 
-uint8_t term_get_key();
+uint8_t term_get_key(lined_t *l);
 
 void    term_make_beep();
 void    term_clear_screen();

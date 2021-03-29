@@ -23,12 +23,16 @@
 
 #define cprintf printf
 
+#include <stdint.h>
+
 void clrscr(void); 
 
-void cputs(const unsigned char* s);
+void cputs(const unsigned char *s);
 
-unsigned char cgetc (void);
+uint8_t cgetc(void);
 
-void cclear(unsigned char length);
+void cclear(uint8_t length);
+
+void waitvsync();
 
 #endif // _MEGA65_H_

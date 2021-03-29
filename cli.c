@@ -13,6 +13,7 @@ static const char commands[] = {
   'e','c','h','o', 0,
   'p','a','r','s','e',0,
   'c','l','e','a','r', 0,
+  'r','e','s','e','t', 0,
   'v','e','r','s','i','o','n', 0,
   'u','p','t','i','m','e', 0,
   'l','o','g','o','u','t', 0,
@@ -27,6 +28,7 @@ static const char commands[] = {
   "echo\0"
   "parse\0"
   "clear\0"
+  "reset\0"
   "version\0"
   "uptime\0" 
   "logout\0"
@@ -84,13 +86,17 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   return (argc);
 }
 
+static void not_implemented(char *cmd) {
+  printf("%s: not implemented" LF, cmd);
+}
+
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
 
-  cprintf("available commands are:\r\n");
+  printf("available commands are:" LF);
 
   while (*ptr) {
-    cprintf("  %s\r\n", ptr);
+    printf("  %s" LF, ptr);
     ptr += strlen(ptr) + 1;
   }
 }
@@ -99,7 +105,7 @@ static void cmd_parse(uint8_t argc, char **argv) {
   uint8_t i;
 
   for (i=0; i<argc; i++) {
-    cprintf("argv[%i]='%s'\r\n", (int)i, argv[i]);
+    printf("argv[%i]='%s'" LF, (int)i, argv[i]);
   }
 }
 
@@ -107,17 +113,17 @@ static void cmd_echo(uint8_t argc, char **argv) {
   uint8_t i;
 
   for (i=1; i<argc; i++) {
-    cprintf("%s", argv[i]);
-    if (i < argc - 1) cprintf(" ");
+    printf("%s", argv[i]);
+    if (i < argc - 1) printf(" ");
   }
-  cprintf("\r\n");
+  printf(LF);
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
 #ifndef ZX
-  cprintf("push, version " VERSION "\r\n");
+  printf("push, version " VERSION LF);
 #else
-  cprintf("push, version 0.0.0\r\n");
+  not_implemented("version");
 #endif
 }
 
@@ -126,7 +132,7 @@ static void cmd_clear(uint8_t argc, char **argv) {
 }
 
 static void cmd_uptime(uint8_t argc, char **argv) {
-  cprintf("uptime: not implemented\r\n");
+  not_implemented("uptime");
 }
 
 void lined_complete_cb(lined_t *l) {
@@ -182,6 +188,8 @@ uint8_t cli_exec(char *cmd) {
 
   if (!strcmp(argv[0], "exit") || !strcmp(argv[0], "logout")) {
     return (1); // exit
+  } else if (!strcmp(argv[0], "reset")) {
+    return (2); // reset
   } else if (!strcmp(argv[0], "help")) {
     cmd_help(argc, argv);
   } else if (!strcmp(argv[0], "echo")) {
@@ -195,7 +203,7 @@ uint8_t cli_exec(char *cmd) {
   } else if (!strcmp(argv[0], "uptime")) {
     cmd_uptime(argc, argv);
   } else {
-    cprintf("%s: command not found\r\n", argv[0]);
+    printf("%s: command not found" LF, argv[0]);
   }
 
   return (0);
