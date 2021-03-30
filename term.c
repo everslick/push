@@ -156,7 +156,7 @@ uint8_t term_get_key(lined_t *l) {
   if (c ==  20) c = TERM_KEY_BACKSPACE;
   if (c == 148) c = TERM_KEY_DELETE; // SHIFT-BACKSPACE
   if (c == 131) c = TERM_KEY_TAB;    // SHIFT-ESCAPE
-  if (c ==  94) c = TERM_KEY_CTRL_A; // PG-DOWN
+  if (c ==  94) c = TERM_KEY_TAB;    // SHIFT-TILDE
   if (c ==  19) c = TERM_KEY_CTRL_A; // HOME
   if (c == 145) c = TERM_KEY_CTRL_P; // UP
   if (c ==  17) c = TERM_KEY_CTRL_N; // DOWN
