@@ -415,17 +415,13 @@ static void edit_delete_prev_word(lined_t *l) {
  * completion.
  *
  * The function returns the code of the last pressed key. */
-static uint8_t edit_line(lined_t *l) {
-  uint8_t c = term_get_key(l);
-
-  if (c == TERM_KEY_NONE) return (TERM_KEY_NONE);
-
+static uint8_t edit_line(lined_t *l, uint8_t key) {
 #ifdef HAVE_COMPLETION
   /* Handle autocompletion. */
-  complete_line(l, &c);
+  complete_line(l, &key);
 #endif
 
-  if (c == TERM_KEY_ENTER) {
+  if (key == TERM_KEY_ENTER) {
 #ifdef HAVE_HISTORY
     if (history_len > 0) {
       free(history[--history_len]);
@@ -442,14 +438,18 @@ static uint8_t edit_line(lined_t *l) {
     }
 #endif
 
+#ifdef HAVE_HISTORY
+    lined_history_add(l->buf);
+#endif
+
     return (TERM_KEY_ENTER);
-  } else if (c == TERM_KEY_CTRL_C) {
+  } else if (key == TERM_KEY_CTRL_C) {
     return (TERM_KEY_CTRL_C);
-  } else if (c == TERM_KEY_BACKSPACE) {
+  } else if (key == TERM_KEY_BACKSPACE) {
     edit_backspace(l);
-  } else if (c == TERM_KEY_DELETE) {
+  } else if (key == TERM_KEY_DELETE) {
     edit_delete(l);
-  } else if (c == TERM_KEY_CTRL_D) {
+  } else if (key == TERM_KEY_CTRL_D) {
     /* remove char at right of cursor, or if the
      * line is empty, act as end-of-file. */
     if (l->len > 0) {
@@ -463,7 +463,7 @@ static uint8_t edit_line(lined_t *l) {
 
       return (TERM_KEY_CTRL_D);
     }
-  } else if (c == TERM_KEY_CTRL_T) {
+  } else if (key == TERM_KEY_CTRL_T) {
     /* swaps current character with previous. */
     if (l->pos > 0 && l->pos < l->len) {
       uint8_t aux = l->buf[l->pos-1];
@@ -474,42 +474,42 @@ static uint8_t edit_line(lined_t *l) {
 
       refresh_line(l);
     }
-  } else if (c == TERM_KEY_CTRL_B) {
+  } else if (key == TERM_KEY_CTRL_B) {
     edit_move_left(l);
-  } else if (c == TERM_KEY_CTRL_F) {
+  } else if (key == TERM_KEY_CTRL_F) {
     edit_move_right(l);
 #ifdef HAVE_HISTORY
-  } else if (c == TERM_KEY_CTRL_P) {
+  } else if (key == TERM_KEY_CTRL_P) {
     edit_history_next(l, -1);
-  } else if (c == TERM_KEY_CTRL_N) {
+  } else if (key == TERM_KEY_CTRL_N) {
     edit_history_next(l,  1);
 #endif
-  } else if (c == TERM_KEY_CTRL_U) {
+  } else if (key == TERM_KEY_CTRL_U) {
     /* delete the whole line. */
     l->buf[0] = 0;
     l->pos = l->len = 0;
     refresh_line(l);
-  } else if (c == TERM_KEY_CTRL_K) {
+  } else if (key == TERM_KEY_CTRL_K) {
     /* delete from current to end of line. */
     l->buf[l->pos] = 0;
     l->len = l->pos;
     refresh_line(l);
-  } else if (c == TERM_KEY_CTRL_A) {
+  } else if (key == TERM_KEY_CTRL_A) {
     /* go to the start of the line */
     edit_move_home(l);
-  } else if (c == TERM_KEY_CTRL_E) {
+  } else if (key == TERM_KEY_CTRL_E) {
     /* go to the end of the line */
     edit_move_end(l);
-  } else if (c == TERM_KEY_CTRL_L) {
+  } else if (key == TERM_KEY_CTRL_L) {
     /* clear screen */
     term_clear_screen();
     refresh_line(l);
-  } else if (c == TERM_KEY_CTRL_W) {
+  } else if (key == TERM_KEY_CTRL_W) {
     /* delete previous word */
     edit_delete_prev_word(l);
   } else {
-    if (c >= 32 && c < 127) {
-      edit_insert(l, c);
+    if (key >= 32 && key < 127) {
+      edit_insert(l, key);
     }
   }
 
@@ -541,6 +541,8 @@ lined_t *lined_init() {
   l->lc     = NULL;
 #endif
 
+  term_screen_size(&l->cols, &l->rows);
+
   return (l);
 }
 
@@ -560,10 +562,6 @@ void lined_reset(lined_t *l, uint8_t flags) {
   l->pos    = 0;
   l->len    = 0;
   l->flags  = flags;
-
-  if ((l->cols == 0) || (l->rows == 0)) {
-    term_get_screen_size(&l->cols, &l->rows);
-  }
 
   // show the prompt, even when ECHO is off
   l->flags |= LINED_ECHO;
@@ -585,16 +583,8 @@ char *lined_line(lined_t *l) {
   return (l->buf);
 }
 
-uint8_t lined_poll(lined_t *l) {
-  uint8_t key = edit_line(l);
-
-  if (key == TERM_KEY_ENTER) {
-#ifdef HAVE_HISTORY
-    lined_history_add(l->buf);
-#endif
-  }
-
-  return (key);
+void lined_edit(lined_t *l, uint8_t key) {
+  edit_line(l, key);
 }
 
 void lined_fini(lined_t *l) {

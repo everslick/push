@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "mega65.h"
 
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
@@ -7,11 +9,14 @@ int8_t strncmp(const char *s1, const char *s2, uint8_t n) {
   uint8_t i;
 
   for (i=0; i<n; i++) {
-    if (s1[i] != s2[i]) {
-      return ((s1[i]>s2[i]) ? 1 : -1);
+    char c1 = toupper(s1[i]);
+    char c2 = toupper(s2[i]);
+
+    if (c1 != c2) {
+      return ((c1>c2) ? 1 : -1);
     }
 
-    if (!s1[i] || !s2[i]) break;
+    if (!c1 || !c2) break;
   }
 
   return (0);
@@ -19,10 +24,6 @@ int8_t strncmp(const char *s1, const char *s2, uint8_t n) {
 
 int8_t strcmp(const char *s1, const char *s2) {
   return (strncmp(s1, s2, 255));
-}
-
-void togglecase(void) {
-  POKE(0xD018, PEEK(0xD018) ^ 0x02);
 }
 
 uint8_t cgetc(void) {

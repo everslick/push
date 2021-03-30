@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef M65
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
 #define PEEK(X)   (*(unsigned char *)(X))
 
@@ -13,11 +12,10 @@ uint8_t cgetc(void) {
     k = PEEK(0xD610);
   }
 
-  POKE(0xD610, 0);
+  while (PEEK(0xD610)) POKE(0xD610,0);
 
   return (k);
 }
-#endif
 
 static const char *test = "   echo     this is a  '   foo  ' test  ";
 
@@ -88,13 +86,11 @@ int main() {
   textcolor(1);
   list(xargc, xargv);
 
-#ifdef M65
   uint8_t k = 0;
 
   if ((k=cgetc())) {
     printf("key = '%i'\r\n", (int)k);
   }
-#endif
 
   return (0);
 }

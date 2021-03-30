@@ -42,13 +42,24 @@ static const char commands[] = {
 
 #endif
 
+#define KEYS                                 \
+  "  ctrl+c=break b=left  l=cls  k=ceol"  LF \
+  "  ctrl+d=exit  f=right o=osd  u=cline" LF \
+  "  ctrl+a=home  p=up    r=char w=cword" LF \
+  "  ctrl+e=end   n=down  t=swap"         LF
+
+#ifdef KICKC
+#define STRT '\''
+#else
+#define STRT '"'
+#endif
+
 static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
   char *s = cmd, *t = s + strlen(s) - 1;
 
   while ((t >= s) && (*t && (*t == ' '))) *t-- = 0; // trim end
 
-  //memset(argv, 0, size);
   for (i=0; i<args; i++) {
     argv[i] = 0;
   }
@@ -61,7 +72,7 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       while (*s && (*s == ' ')) s++;
 
       // skip quotation mark
-      if (*s && (*s == '"')) { s++; quote ^= 1; }
+      if (*s && (*s == STRT)) { s++; quote ^= 1; }
 
       // start next arg
       *argv++ = s;
@@ -71,9 +82,9 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       }
     }
 
-    if (*s == '"') {
+    if (*s == STRT) {
       *s++ = 0; // remove and skip
-      if (*s == '"') first = 1;
+      if (*s == STRT) first = 1;
       quote ^= 1;
     } else if ((!quote) && (*s == ' ')) {
       *s++ = 0; // remove and skip
@@ -99,6 +110,11 @@ static void cmd_help(uint8_t argc, char **argv) {
     printf("  %s" LF, ptr);
     ptr += strlen(ptr) + 1;
   }
+
+  printf(LF);
+  printf("line editor keys are:" LF);
+  printf(KEYS);
+  printf(LF);
 }
 
 static void cmd_parse(uint8_t argc, char **argv) {

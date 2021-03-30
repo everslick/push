@@ -34,12 +34,19 @@ restart:
     "  /_/ petite un*x shell /_/"      LF
   );
 
-  gotoxy(0, 7);
+  printf(LF);
+  textcolor(COLOR_YELLOW);
+  //printf("w = %d" LF, lined->cols);
+  //printf("h = %d" LF, lined->rows);
+  textcolor(COLOR_DEFAULT);
+  printf(LF);
 
   lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
 
   while (1) {
-    uint8_t key = lined_poll(lined);
+    uint8_t key = term_get_key(lined);
+
+    lined_edit(lined, key);
 
     if (key == TERM_KEY_ENTER) {
       char *cmd = lined_line(lined);

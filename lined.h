@@ -76,16 +76,16 @@ typedef struct lined_t {
 
 lined_t *lined_init();
 char    *lined_line(lined_t *l);
-uint8_t  lined_poll(lined_t *l);
 void     lined_fini(lined_t *l);
 
+void     lined_edit(lined_t *l, uint8_t key);
 void     lined_resize(lined_t *l, uint8_t w, uint8_t h);
 void     lined_prompt(lined_t *l, const char *prompt);
 void     lined_reset(lined_t *l, uint8_t flags);
 
-void lined_completion_add(lined_t *l, const char *str);
-void lined_history_add(const char *line);
-void lined_history_len(uint8_t len);
+void     lined_completion_add(lined_t *l, const char *str);
+void     lined_history_add(const char *line);
+void     lined_history_len(uint8_t len);
 
 extern void lined_complete_cb(lined_t *l);
 
