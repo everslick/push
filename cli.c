@@ -6,7 +6,8 @@
 #include "term.h"
 #include "cli.h"
 
-#ifdef C64
+#ifdef HAVE_FILEIO
+#include <sys/types.h>
 #include <dirent.h>
 #endif
 
@@ -115,6 +116,10 @@ static void missing_arg(const char *cmd) {
   printf("%s: missing argument" LF, cmd);
 }
 
+static void open_failed(const char *cmd) {
+  printf("%s: open failed" LF, cmd);
+}
+
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
 
@@ -162,7 +167,7 @@ static void cmd_clear(uint8_t argc, char **argv) {
 }
 
 static void cmd_rm(uint8_t argc, char **argv) {
-#ifdef C64
+#ifdef HAVE_FILEIO
   if (argc < 2) {
     missing_arg("rm");
   } else {
@@ -176,7 +181,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
 }
 
 static void cmd_mv(uint8_t argc, char **argv) {
-#ifdef C64
+#ifdef HAVE_FILEIO
   if (argc < 3) {
     missing_arg("rm");
   } else {
@@ -190,7 +195,7 @@ static void cmd_mv(uint8_t argc, char **argv) {
 }
 
 static void cmd_ls(uint8_t argc, char **argv) {
-#ifdef C64
+#ifdef HAVE_FILEIO
   struct dirent *entry;
   uint8_t files = 0;
   DIR *dir;
@@ -198,20 +203,20 @@ static void cmd_ls(uint8_t argc, char **argv) {
   dir = opendir(".");
 
   if (!dir) {
-    printf("ls: failed to open directory" LF);
+    open_failed("ls");
   } else {
-    readdir(dir); // "path"
-    readdir(dir); // "."
-    readdir(dir); // ".."
-
     while ((entry = readdir(dir))) {
-      if (entry->d_type == 2) {
-        textcolor(COLOR_BLUE);
-      } else {
-        textcolor(COLOR_DEFAULT);
+      const char *name = entry->d_name;
+      uint8_t col = COLOR_DEFAULT;
+
+      if (!strcmp(name, ".") || !strcmp(name, "..")) {
+        continue;
       }
 
-      printf("%-15s", entry->d_name);
+      if (entry->d_type == 2) col = COLOR_BLUE;
+
+      textcolor(col);
+      printf("%-15s", name);
       if (files++ % 2) printf(LF);
     }
 
