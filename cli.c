@@ -6,6 +6,10 @@
 #include "term.h"
 #include "cli.h"
 
+#ifdef C64
+#include <dirent.h>
+#endif
+
 #ifdef KICKC
 
 static const char commands[] = {
@@ -30,7 +34,9 @@ static const char commands[] = {
   "clear\0"
   "reset\0"
   "version\0"
-  "uptime\0" 
+  "ls\0" 
+  "mv\0" 
+  "rm\0" 
   "logout\0"
   "exit\0"
   "\0" // end marker
@@ -42,11 +48,11 @@ static const char commands[] = {
 
 #endif
 
-#define KEYS                                 \
-  "  ctrl+c=break b=left  l=cls  k=ceol"  LF \
-  "  ctrl+d=exit  f=right o=osd  u=cline" LF \
-  "  ctrl+a=home  p=up    r=char w=cword" LF \
-  "  ctrl+e=end   n=down  t=swap"         LF
+#define KEYS                           \
+  " c=break b=left  l=cls  k=ceol"  LF \
+  " d=exit  f=right o=osd  u=cline" LF \
+  " a=home  p=up    r=char w=cword" LF \
+  " e=end   n=down  t=swap"         LF
 
 #ifdef KICKC
 #define STRT '\''
@@ -97,8 +103,16 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   return (argc);
 }
 
-static void not_implemented(char *cmd) {
+static void not_implemented(const char *cmd) {
   printf("%s: not implemented" LF, cmd);
+}
+
+static void not_found(const char *cmd) {
+  printf("%s: no such file or directory" LF, cmd);
+}
+
+static void missing_arg(const char *cmd) {
+  printf("%s: missing argument" LF, cmd);
 }
 
 static void cmd_help(uint8_t argc, char **argv) {
@@ -107,12 +121,12 @@ static void cmd_help(uint8_t argc, char **argv) {
   printf("available commands are:" LF);
 
   while (*ptr) {
-    printf("  %s" LF, ptr);
+    printf(" %s" LF, ptr);
     ptr += strlen(ptr) + 1;
   }
 
   printf(LF);
-  printf("line editor keys are:" LF);
+  printf("line editor keys are [ctrl]+[x]:" LF);
   printf(KEYS);
   printf(LF);
 }
@@ -147,8 +161,67 @@ static void cmd_clear(uint8_t argc, char **argv) {
   term_clear_screen();
 }
 
-static void cmd_uptime(uint8_t argc, char **argv) {
-  not_implemented("uptime");
+static void cmd_rm(uint8_t argc, char **argv) {
+#ifdef C64
+  if (argc < 2) {
+    missing_arg("rm");
+  } else {
+    if (remove(argv[1])) {
+      not_found("rm");
+    }
+  }
+#else
+  not_implemented("rm");
+#endif
+}
+
+static void cmd_mv(uint8_t argc, char **argv) {
+#ifdef C64
+  if (argc < 3) {
+    missing_arg("rm");
+  } else {
+    if (rename(argv[1], argv[2])) {
+      not_found("mv");
+    }
+  }
+#else
+  not_implemented("mv");
+#endif
+}
+
+static void cmd_ls(uint8_t argc, char **argv) {
+#ifdef C64
+  struct dirent *entry;
+  uint8_t files = 0;
+  DIR *dir;
+
+  dir = opendir(".");
+
+  if (!dir) {
+    printf("ls: failed to open directory" LF);
+  } else {
+    readdir(dir); // "path"
+    readdir(dir); // "."
+    readdir(dir); // ".."
+
+    while ((entry = readdir(dir))) {
+      if (entry->d_type == 2) {
+        textcolor(COLOR_BLUE);
+      } else {
+        textcolor(COLOR_DEFAULT);
+      }
+
+      printf("%-15s", entry->d_name);
+      if (files++ % 2) printf(LF);
+    }
+
+    if (files % 2) printf(LF);
+
+    closedir(dir);
+  }
+#else
+  not_implemented("ls");
+#endif
 }
 
 void lined_complete_cb(lined_t *l) {
@@ -216,8 +289,12 @@ uint8_t cli_exec(char *cmd) {
     cmd_clear(argc, argv);
   } else if (!strcmp(argv[0], "version")) {
     cmd_version(argc, argv);
-  } else if (!strcmp(argv[0], "uptime")) {
-    cmd_uptime(argc, argv);
+  } else if (!strcmp(argv[0], "ls")) {
+    cmd_ls(argc, argv);
+  } else if (!strcmp(argv[0], "mv")) {
+    cmd_mv(argc, argv);
+  } else if (!strcmp(argv[0], "rm")) {
+    cmd_rm(argc, argv);
   } else {
     printf("%s: command not found" LF, argv[0]);
   }

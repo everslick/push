@@ -13,11 +13,6 @@ void gotoxy(unsigned int x, unsigned int y) {
   zx_movecursorto(y, x);
 }
 
-//void screensize(uint8_t &x, uint8_t &y) {
-//  *x = 32;
-//  *y = 24;
-//}
-
 uint8_t cursor(uint8_t onoff) {
   uint8_t old = cursor_onoff;
 

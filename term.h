@@ -44,19 +44,19 @@
 #define TERM_KEY_BACKSPACE   8
 #define TERM_KEY_TAB         9
 #define TERM_KEY_LINEFEED   10
-#define TERM_KEY_CTRL_K     11 // DEL RIGHT
+#define TERM_KEY_CTRL_K     11 // DEL TO EOL
 #define TERM_KEY_CTRL_L     12 // CLS
 #define TERM_KEY_ENTER      13
 #define TERM_KEY_CTRL_N     14 // DOWN
-#define TERM_KEY_CTRL_O     15 // OSD
+#define TERM_KEY_CTRL_O     15 // TOGGLE OSD
 #define TERM_KEY_CTRL_P     16 // UP
 #define TERM_KEY_CTRL_Q     17
-#define TERM_KEY_CTRL_R     18
+#define TERM_KEY_CTRL_R     18 // SWITCH CHARSET
 #define TERM_KEY_CTRL_S     19
-#define TERM_KEY_CTRL_T     20 // SWAP
-#define TERM_KEY_CTRL_U     21 // DEL LINE
+#define TERM_KEY_CTRL_T     20 // SWAP LAST CHARS
+#define TERM_KEY_CTRL_U     21 // DEL WHOLE LINE
 #define TERM_KEY_CTRL_V     22
-#define TERM_KEY_CTRL_W     23 // DEL WORD
+#define TERM_KEY_CTRL_W     23 // DEL LAST WORD
 #define TERM_KEY_CTRL_X     24
 #define TERM_KEY_CTRL_Y     25
 #define TERM_KEY_CTRL_Z     26

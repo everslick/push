@@ -12,6 +12,7 @@
 
 #define COLOR_DEFAULT         9
 
+// printf should go through cprintf
 #define printf cprintf
 
 #include <stdint.h>

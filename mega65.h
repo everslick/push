@@ -21,6 +21,7 @@
 
 #define COLOR_DEFAULT      15
 
+// cprintf is missing in MEGA65 conio.h
 #define cprintf printf
 
 #define LF "\n"

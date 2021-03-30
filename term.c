@@ -36,7 +36,6 @@ static void show_osd(lined_t *l) {
   gotoxy(w-7, 3); cprintf("y = %3u", y);
   gotoxy(w-7, 4); cprintf("w = %3u", w);
   gotoxy(w-7, 5); cprintf("h = %3u", h);
-  textcolor(COLOR_DEFAULT);
 
   gotoxy(x, y);
 }
@@ -57,7 +56,6 @@ static void show_hint(lined_t *l) {
 
       textcolor(COLOR_BLUE);
       for (i=0; i<len; i++) cputc(hint[i]);
-      textcolor(COLOR_DEFAULT);
     }
   }
 #endif
@@ -119,28 +117,25 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
 
   /* Write the prompt */
   textcolor(COLOR_RED);
-  cputs(l->prompt);
-  textcolor(COLOR_DEFAULT);
+  for (i=0; i<l->plen; i++) cputc(l->prompt[i]);
 
   /* Write the current buffer content */
   textcolor(COLOR_WHITE);
   for (i=0; i<len; i++) cputc(buf[i]);
-  textcolor(COLOR_DEFAULT);
 
   /* Write the hint if any */
   show_hint(l);
 
+  /* Erase to right */
+  cclear((l->cols - wherex()) - 1);
+
 #ifdef HAVE_OSD
   /* Show the OSD if enabled. */
   if (osd) show_osd(l);
-
-  i = (osd && (wherey() > 0) && wherey() < 6) ? 7 : 0;
-#else
-  i = 0;
 #endif
 
-  /* Erase to right */
-  cclear((l->cols - wherex()) - i - 1);
+  /* Reset text color */
+  textcolor(COLOR_DEFAULT);
 
   /* Move cursor to original position */
   gotoxy(pos + l->plen, y);
