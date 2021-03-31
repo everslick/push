@@ -1,6 +1,6 @@
 ## push
 
-** The petite Un\*x shell.
+**The petite Un\*x shell.**
 
 ### About
 
