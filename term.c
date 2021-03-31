@@ -7,6 +7,12 @@
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
 #define PEEK(X)   (*(unsigned char *)(X))
 
+const char *keys = NULL;
+
+void term_push_keys(const char *str) {
+  keys = str;
+}
+
 void togglecase(void) {
 #ifdef HAVE_PETSCII
   POKE(0xD018, PEEK(0xD018) ^ 0x02);
@@ -142,15 +148,16 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
 }
 
 uint8_t term_get_key(lined_t *l) {
-  uint8_t c = cgetc();
+  uint8_t c = keys ? *keys++ : cgetc();
+
+  // end of input stream
+  if (keys && (*keys == 0)) keys = NULL;
 
 #ifdef HAVE_OSD
   key = c;
 #endif
 
-#ifdef ZX
-  if (c ==  10) c = TERM_KEY_ENTER;
-#endif
+  if ((c == 10) || (c == 13)) c = TERM_KEY_ENTER;
 
 #ifdef HAVE_PETSCII
   if (c ==  20) c = TERM_KEY_BACKSPACE;

@@ -38,6 +38,7 @@ static const char commands[] = {
   "ls\0" 
   "mv\0" 
   "rm\0" 
+  "test\0" 
   "logout\0"
   "exit\0"
   "\0" // end marker
@@ -45,6 +46,13 @@ static const char commands[] = {
   // TODO
   //"cat\0" "cp\0" "df\0" "dd\0" "ls\0" "mkfs\0"
   //"mv\0" "rm\0" "tail\0" "touch\0" "hd\0" "tetris\0"
+};
+
+static const char input[] = {
+  "help\r"
+  "echo foo    bar     baz\r"
+  "parse   this  is a test for   the argc/argv parser\r"
+  "version\r"
 };
 
 #endif
@@ -300,6 +308,8 @@ uint8_t cli_exec(char *cmd) {
     cmd_mv(argc, argv);
   } else if (!strcmp(argv[0], "rm")) {
     cmd_rm(argc, argv);
+  } else if (!strcmp(argv[0], "test")) {
+    term_push_keys(input);
   } else {
     printf("%s: command not found" LF, argv[0]);
   }

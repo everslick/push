@@ -39,7 +39,7 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       while (*s && (*s == ' ')) s++;
 
       // skip quotation mark
-      if (*s && (*s == '\'')) { s++; quote ^= 1; }
+      if (*s && (*s == '"')) { s++; quote ^= 1; }
 
       // start next arg
       *argv++ = s;
@@ -49,9 +49,9 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       }
     }
 
-    if (*s == '\'') {
+    if (*s == '"') {
       *s++ = 0; // remove and skip
-      if (*s == '\'') first = 1;
+      if (*s == '"') first = 1;
       quote ^= 1;
     } else if ((!quote) && (*s == ' ')) {
       *s++ = 0; // remove and skip

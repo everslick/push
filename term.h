@@ -84,4 +84,6 @@ void    term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos);
 
 extern const char *term_hint_cb(lined_t *l);
 
+void    term_push_keys(const char *str);
+
 #endif // _TERM_H_
