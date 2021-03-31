@@ -7,8 +7,12 @@
 #include "cli.h"
 
 #ifdef HAVE_FILEIO
+#ifdef C64
+#include <cbm.h>
+#else
 #include <sys/types.h>
 #include <dirent.h>
+#endif
 #endif
 
 #ifdef KICKC
@@ -205,24 +209,39 @@ static void cmd_mv(uint8_t argc, char **argv) {
 
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
+  uint8_t dev = 8, files = 0;
+#ifdef C64
+  struct cbm_dirent entry;
+#else
+  DIR *dir = opendir(".");
   struct dirent *entry;
-  uint8_t files = 0;
-  DIR *dir;
+#endif
 
-  dir = opendir(".");
-
+#ifdef C64
+  if (cbm_opendir(1, dev)) {
+#else
   if (!dir) {
+#endif
     open_failed("ls");
   } else {
+#ifdef C64
+    while (!cbm_readdir(1, &entry)) {
+      const char *name = entry.name;
+#else
     while ((entry = readdir(dir))) {
       const char *name = entry->d_name;
+#endif
       uint8_t col = COLOR_DEFAULT;
 
       if (!strcmp(name, ".") || !strcmp(name, "..")) {
         continue;
       }
 
-      if (entry->d_type == 2) col = COLOR_BLUE;
+#ifdef C64
+      if (entry.type == CBM_T_DIR) col = COLOR_BLUE;
+#else
+      if (entry->d_type == DT_DIR) col = COLOR_BLUE;
+#endif
 
       textcolor(col);
       printf("%-19s", name);
@@ -231,7 +250,11 @@ static void cmd_ls(uint8_t argc, char **argv) {
 
     if (files % 2) printf(LF);
 
+#ifdef C64
+    cbm_closedir(1);
+#else
     closedir(dir);
+#endif
   }
 #else
   not_implemented("ls");
