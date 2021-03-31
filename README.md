@@ -8,18 +8,21 @@
 
 **push** is a very small, yet feature rich shell for embedded
 systems. It is built on top of a stripped down version of the
-line editing library [linenoise](https://github.com/antirez/linenoise).
+[linenoise](https://github.com/antirez/linenoise) line editing
+library.
 
 **push** thus inherits *TAB completion*, *history* and *hints*
 (suggestions at the right of the prompt as you type). Additionally
 it provides rich line editing feautures like cursor movment, inserting
-text on the current cursor position, jumping to the first (HOME) or
-last (END) position in the input line, deleting the last word and more.
+text at the current cursor position, jumping to the first (HOME) or
+last (END) position of the input buffer, deleting the last word and
+more.
 
 ### Platforms
 
-**push** is intended to be cross platform. Currently it builds on GNU/Linux
-(gcc) for easy testing and development, and can be cross compiled for:
+**push** is intended to be cross platform. Currently it builds on
+GNU/Linux (gcc) for easy testing and development, and can be cross
+compiled for:
 
 * [C64](wikipedia.org/wiki/Commodore_64) with [cc65](cc65.org)
 * [MEGA65](mega65.org) with [kickc](gitlab.com/camelot/kickc)
@@ -29,8 +32,8 @@ last (END) position in the input line, deleting the last word and more.
 While it builds successfully for all those target platforms, it is only
 really working well on linux and C64. The main reason is lacking/broken
 support for some features from the C runtime libraries on some platforms,
-most important CONIO and heap management. Hopefully over time the toolchains
-will provide those APIs.
+most important CONIO and heap management. Hopefully over time the
+toolchains will provide those APIs.
 
 ### Disclaimer
 
