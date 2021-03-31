@@ -1,5 +1,7 @@
 ## push
 
+** The petite Un\*x shell.
+
 ### About
 
 **push** is a very small, yet feature rich shell for embedded
