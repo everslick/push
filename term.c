@@ -26,7 +26,7 @@ static void clear(uint8_t length) {
 
 #ifdef HAVE_OSD
 uint8_t key = 0;
-uint8_t osd = 1;
+uint8_t osd = 0;
 
 static void hide_osd(lined_t *l) {
   uint8_t i, w = l->cols, x = wherex(), y = wherey();
