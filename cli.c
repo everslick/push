@@ -210,21 +210,21 @@ static void cmd_mv(uint8_t argc, char **argv) {
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   uint8_t dev = 8, files = 0;
-#ifdef C64
+#ifdef __CBM__
   struct cbm_dirent entry;
 #else
   DIR *dir = opendir(".");
   struct dirent *entry;
 #endif
 
-#ifdef C64
+#ifdef __CBM__
   if (cbm_opendir(1, dev)) {
 #else
   if (!dir) {
 #endif
     open_failed("ls");
   } else {
-#ifdef C64
+#ifdef __CBM__
     while (!cbm_readdir(1, &entry)) {
       const char *name = entry.name;
 #else
@@ -237,7 +237,7 @@ static void cmd_ls(uint8_t argc, char **argv) {
         continue;
       }
 
-#ifdef C64
+#ifdef __CBM__
       if (entry.type == CBM_T_DIR) col = COLOR_BLUE;
 #else
       if (entry->d_type == DT_DIR) col = COLOR_BLUE;
@@ -250,7 +250,7 @@ static void cmd_ls(uint8_t argc, char **argv) {
 
     if (files % 2) printf(LF);
 
-#ifdef C64
+#ifdef __CBM__
     cbm_closedir(1);
 #else
     closedir(dir);
