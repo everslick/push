@@ -224,7 +224,7 @@ static void cmd_ls(uint8_t argc, char **argv) {
       if (entry->d_type == 2) col = COLOR_BLUE;
 
       textcolor(col);
-      printf("%-15s", name);
+      printf("%-19s", name);
       if (files++ % 2) printf(LF);
     }
 
