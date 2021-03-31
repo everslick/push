@@ -2,6 +2,8 @@
 
 **The petite Un\*x shell.**
 
+![push-c64](https://user-images.githubusercontent.com/1909551/113136556-ca459300-9223-11eb-81ac-aa7be3cb86ae.png)
+
 ### About
 
 **push** is a very small, yet feature rich shell for embedded
@@ -56,3 +58,16 @@ The Makefile contains various targets for compiling and testing:
 * **make c64emu** (start prg in vice)
 * **make m65emu** (start prg in xemu)
 * **make zxemu** (start tap in zesarux)
+
+### Screenshots
+
+#### C64
+
+![C64-1](https://user-images.githubusercontent.com/1909551/113136210-5e632a80-9223-11eb-8d3c-99e896990f25.png)
+![C64-2](https://user-images.githubusercontent.com/1909551/113136236-6a4eec80-9223-11eb-944a-c02050215299.png)
+![C64-3](https://user-images.githubusercontent.com/1909551/113136251-7044cd80-9223-11eb-9dcf-1c0f000942a1.png)
+![C64-4](https://user-images.githubusercontent.com/1909551/113136267-78047200-9223-11eb-8e1f-762ee5b33faa.png)
+
+##### Linux
+
+![push-linux](https://user-images.githubusercontent.com/1909551/113136405-9a968b00-9223-11eb-828b-0295aa947608.png)
