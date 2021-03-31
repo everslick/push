@@ -65,7 +65,6 @@ The Makefile contains various targets for compiling and testing:
 
 ![C64-1](https://user-images.githubusercontent.com/1909551/113136210-5e632a80-9223-11eb-8d3c-99e896990f25.png)
 ![C64-2](https://user-images.githubusercontent.com/1909551/113136236-6a4eec80-9223-11eb-944a-c02050215299.png)
-![C64-3](https://user-images.githubusercontent.com/1909551/113136251-7044cd80-9223-11eb-9dcf-1c0f000942a1.png)
 ![C64-4](https://user-images.githubusercontent.com/1909551/113136267-78047200-9223-11eb-8e1f-762ee5b33faa.png)
 
 ##### Linux
