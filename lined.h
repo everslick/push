@@ -74,7 +74,7 @@ typedef struct lined_t {
   const char *prompt;        /* Prompt to display. */
 } lined_t;
 
-lined_t *lined_init();
+lined_t *lined_init(void);
 char    *lined_line(lined_t *l);
 void     lined_fini(lined_t *l);
 

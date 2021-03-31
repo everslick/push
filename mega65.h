@@ -30,8 +30,4 @@
 
 uint8_t cgetc(void);
 
-void cclear(uint8_t length);
-
-void waitvsync();
-
 #endif // _MEGA65_H_

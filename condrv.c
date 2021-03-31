@@ -246,12 +246,6 @@ uint8_t bordercolor(uint8_t color) {
   return (old);
 }
 
-void cclear(uint8_t length) {
-  uint8_t i;
-
-  for (i=0; i<length; i++) cputc(' ');
-}
-
 void screensize(uint8_t *x, uint8_t *y) {
   if (!screen_w || !screen_h) {
     get_screen_size(&screen_w, &screen_h);
@@ -279,8 +273,4 @@ int vcprintf(const char *format, va_list ap) {
   cputs(buf);
 
   return (ret);
-}
-
-void waitvsync() {
-  usleep(20000);
 }

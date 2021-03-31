@@ -163,11 +163,12 @@ static void cmd_echo(uint8_t argc, char **argv) {
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
+#ifndef ZXN
 #ifndef ZX
-  printf("push, version " VERSION LF);
-#else
-  not_implemented("version");
+  printf("push, version " VERSION LF); return;
 #endif
+#endif
+  not_implemented("version");
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {

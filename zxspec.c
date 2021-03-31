@@ -30,12 +30,3 @@ uint8_t bgcolor(uint8_t color) {
 
   return (old);
 }
-
-void cclear(uint8_t length) {
-  uint8_t i;
-
-  for (i=0; i<length; i++) cputc(' ');
-}
-
-void waitvsync() {
-}

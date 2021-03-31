@@ -519,7 +519,7 @@ static uint8_t edit_line(lined_t *l, uint8_t key) {
 /* ============================= lined API ================================ */
 
 /* The high level function that creates a new lined context. */
-lined_t *lined_init() {
+lined_t *lined_init(void) {
   lined_t *l = (lined_t *)malloc(sizeof (lined_t));
 
   if (!l) return (NULL);

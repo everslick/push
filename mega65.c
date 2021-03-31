@@ -37,12 +37,3 @@ uint8_t cgetc(void) {
 
   return (k);
 }
-
-void cclear(uint8_t length) {
-  uint8_t i;
-
-  for (i=0; i<length; i++) cputc(' ');
-}
-
-void waitvsync() {
-}

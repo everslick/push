@@ -7,16 +7,21 @@
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
 #define PEEK(X)   (*(unsigned char *)(X))
 
-const char *keys = NULL;
+static const char *keys = NULL;
 
-void term_push_keys(const char *str) {
-  keys = str;
-}
-
-void togglecase(void) {
+static void togglecase(void) {
 #ifdef HAVE_PETSCII
   POKE(0xD018, PEEK(0xD018) ^ 0x02);
 #endif
+}
+
+static void waitvsync(void) {
+}
+
+static void clear(uint8_t length) {
+  uint8_t i;
+
+  for (i=0; i<length; i++) cputc(' ');
 }
 
 #ifdef HAVE_OSD
@@ -27,7 +32,7 @@ static void hide_osd(lined_t *l) {
   uint8_t i, w = l->cols, x = wherex(), y = wherey();
 
   for (i=1; i<6; i++) {
-    gotoxy(w-7, i); cclear(7);
+    gotoxy(w-7, i); clear(7);
   }
 
   gotoxy(x, y);
@@ -67,7 +72,7 @@ static void show_hint(lined_t *l) {
 #endif
 }
 
-void term_init() {
+void term_init(void) {
 #ifdef LINUX
   linux_init();
 #endif
@@ -94,13 +99,13 @@ void term_init() {
   clrscr();
 }
 
-void term_fini() {
+void term_fini(void) {
 #ifdef LINUX
   linux_fini();
 #endif
 }
 
-void term_clear_screen() {
+void term_clear_screen(void) {
   clrscr();
 }
 
@@ -133,7 +138,7 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
   show_hint(l);
 
   /* Erase to right */
-  cclear((l->cols - wherex()) - 1);
+  clear((l->cols - wherex()) - 1);
 
 #ifdef HAVE_OSD
   /* Show the OSD if enabled. */
@@ -201,7 +206,7 @@ uint8_t term_get_key(lined_t *l) {
 
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
-void term_make_beep() {
+void term_make_beep(void) {
 #ifndef LINUX
   bordercolor(COLOR_RED);
   waitvsync(); waitvsync();
@@ -210,4 +215,8 @@ void term_make_beep() {
   printf("\x7");
   fflush(stdout);
 #endif
+}
+
+void term_push_keys(const char *str) {
+  keys = str;
 }

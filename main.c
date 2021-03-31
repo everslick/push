@@ -6,7 +6,7 @@
 #include "term.h"
 #include "cli.h"
 
-int main() {
+int main(void) {
   lined_t *lined;
   uint8_t reset;
 

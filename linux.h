@@ -19,7 +19,7 @@
 
 #include "condrv.h"
 
-uint8_t linux_init();
-void    linux_fini();
+uint8_t linux_init(void);
+void    linux_fini(void);
 
 #endif // _LINUX_H_

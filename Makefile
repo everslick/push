@@ -51,7 +51,7 @@ ifeq ($(MACHINE),c64)
 DEFINES += -DC64 -DHAVE_FILEIO
 endif
 
-ifeq ($(MACHINE),mega65)
+ifeq ($(MACHINE),m65)
 DEFINES += -DM65
 endif
 
@@ -64,8 +64,8 @@ SOURCES += zxspec.c
 endif
 
 ifeq ($(MACHINE),zxn)
-DEFINES += -DZX
-SOURCES += zxspec.c
+DEFINES += -DZXN
+SOURCES += zxnext.c
 endif
 
 ifdef TEST
@@ -96,7 +96,10 @@ zxn:
 	$(MAKE) SDK=z88dk MACHINE=zxn z88dk
 
 m65:
-	$(MAKE) SDK=kickc MACHINE=mega65 kickc
+	$(MAKE) SDK=kickc MACHINE=m65 kickc
+
+c65:
+	$(MAKE) SDK=cc65 MACHINE=m65
 
 c64:
 	$(MAKE) SDK=cc65 MACHINE=c64

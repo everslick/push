@@ -16,11 +16,7 @@
 
 #include <stdint.h>
 
-void cclear(uint8_t length);
-
 uint8_t cursor(uint8_t onoff);
 uint8_t bgcolor(uint8_t color);
-
-void waitvsync();
 
 #endif // _ZXSPEC_H_

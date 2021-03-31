@@ -14,6 +14,10 @@
  #include "zxspec.h"
 #endif
 
+#ifdef ZXN
+ #include "zxnext.h"
+#endif
+
 #ifdef M65
  #include "mega65.h"
 #endif
@@ -72,18 +76,18 @@
 #define TERM_KEY_F7        247
 #define TERM_KEY_F8        248
 
-void    term_init();
-void    term_fini();
+void    term_init(void);
+void    term_fini(void);
 
-void    term_make_beep();
-void    term_clear_screen();
+void    term_make_beep(void);
+void    term_clear_screen(void);
 void    term_screen_size(uint8_t *cols, uint8_t *rows);
 
-uint8_t term_get_key(lined_t *l);
 void    term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos);
 
-extern const char *term_hint_cb(lined_t *l);
-
+uint8_t term_get_key(lined_t *l);
 void    term_push_keys(const char *str);
+
+extern const char *term_hint_cb(lined_t *l);
 
 #endif // _TERM_H_
