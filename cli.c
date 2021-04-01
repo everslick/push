@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -8,6 +9,7 @@
 
 #ifdef HAVE_FILEIO
 #ifdef C64
+#include <device.h>
 #include <cbm.h>
 #else
 #include <sys/types.h>
@@ -39,6 +41,9 @@ static const char commands[] = {
   "clear\0"
   "reset\0"
   "version\0"
+  "pwd\0" 
+  "mount\0" 
+  "cd\0" 
   "ls\0" 
   "mv\0" 
   "rm\0" 
@@ -124,6 +129,10 @@ static void not_found(const char *cmd) {
   printf("%s: no such file or directory" LF, cmd);
 }
 
+static void dir_not_found(const char *cmd) {
+  printf("%s: directory not found" LF, cmd);
+}
+
 static void missing_arg(const char *cmd) {
   printf("%s: missing argument" LF, cmd);
 }
@@ -185,7 +194,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
     missing_arg("rm");
   } else {
     if (remove(argv[1])) {
-      not_found("rm");
+      perror("rm");
     }
   }
 #else
@@ -199,7 +208,7 @@ static void cmd_mv(uint8_t argc, char **argv) {
     missing_arg("rm");
   } else {
     if (rename(argv[1], argv[2])) {
-      not_found("mv");
+      perror("mv");
     }
   }
 #else
@@ -207,10 +216,43 @@ static void cmd_mv(uint8_t argc, char **argv) {
 #endif
 }
 
+static void cmd_pwd(uint8_t argc, char **argv) {
+  char buf[FILENAME_MAX], *pwd = NULL;
+
+  pwd = getcwd(buf, sizeof (buf));
+
+  if (pwd) {
+    printf(pwd);
+  } else {
+    perror("pwd");
+  }
+}
+
+static void cmd_mount(uint8_t argc, char **argv) {
+  unsigned char dev = getfirstdevice();
+
+  while (dev != INVALID_DEVICE) {
+    printf ("/dev/fd%d on /mnt/%d" LF, dev - 8, dev);
+    dev = getnextdevice(dev);
+  }
+}
+
+static void cmd_cd(uint8_t argc, char **argv) {
+  unsigned char dev = getfirstdevice();
+  char buf[FILENAME_MAX], *dir = NULL;
+
+  dir = getdevicedir(getfirstdevice(), buf, sizeof (buf));
+
+  if (!dir || chdir(dir)) {
+    perror("cd");
+  }
+}
+
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t dev = 8, files = 0;
+  uint8_t files = 0;
 #ifdef __CBM__
+  uint8_t dev = getcurrentdevice();
   struct cbm_dirent entry;
 #else
   DIR *dir = opendir(".");
@@ -222,7 +264,7 @@ static void cmd_ls(uint8_t argc, char **argv) {
 #else
   if (!dir) {
 #endif
-    open_failed("ls");
+    perror("ls");
   } else {
 #ifdef __CBM__
     while (!cbm_readdir(1, &entry)) {
@@ -297,8 +339,13 @@ const char *term_hint_cb(lined_t *l) {
   // remove all the leading spaces
   while (c && (*c == ' ')) c++;
 
+  if (!strcmp(c, "cd"))    return ("[<dir>]");
+  if (!strcmp(c, "ls"))    return ("[<dir>]");
+  if (!strcmp(c, "mv"))    return ("<old> <new>");
+  if (!strcmp(c, "rm"))    return ("<name>");
+  if (!strcmp(c, "mount")) return ("[<dir>] [<dev>]");
   if (!strcmp(c, "parse")) return ("[<arg1> <arg2> ...]");
-  if (!strcmp(c, "echo"))  return ("<text>");
+  if (!strcmp(c, "echo"))  return ("[<text1> <text2>] ...");
 
   return (NULL);
 }
@@ -316,25 +363,33 @@ uint8_t cli_exec(char *cmd) {
     return (1); // exit
   } else if (!strcmp(argv[0], "reset")) {
     return (2); // reset
-  } else if (!strcmp(argv[0], "help")) {
-    cmd_help(argc, argv);
-  } else if (!strcmp(argv[0], "echo")) {
-    cmd_echo(argc, argv);
-  } else if (!strcmp(argv[0], "parse")) {
-    cmd_parse(argc, argv);
-  } else if (!strcmp(argv[0], "clear")) {
-    cmd_clear(argc, argv);
-  } else if (!strcmp(argv[0], "version")) {
-    cmd_version(argc, argv);
+  } else if (!strcmp(argv[0], "cd")) {
+    cmd_cd(argc, argv);
   } else if (!strcmp(argv[0], "ls")) {
     cmd_ls(argc, argv);
   } else if (!strcmp(argv[0], "mv")) {
     cmd_mv(argc, argv);
   } else if (!strcmp(argv[0], "rm")) {
     cmd_rm(argc, argv);
+  } else if (!strcmp(argv[0], "pwd")) {
+    cmd_pwd(argc, argv);
+  } else if (!strcmp(argv[0], "mount")) {
+    cmd_mount(argc, argv);
+  } else if (!strcmp(argv[0], "clear")) {
+    cmd_clear(argc, argv);
+  } else if (!strcmp(argv[0], "echo")) {
+    cmd_echo(argc, argv);
+  } else if (!strcmp(argv[0], "version")) {
+    cmd_version(argc, argv);
+  } else if (!strcmp(argv[0], "help")) {
+    cmd_help(argc, argv);
+  } else if (!strcmp(argv[0], "parse")) {
+    cmd_parse(argc, argv);
   } else if (!strcmp(argv[0], "test")) {
     term_push_keys(input);
   } else {
+    exec(argv[0], NULL); // will not return if works
+
     printf("%s: command not found" LF, argv[0]);
   }
 
