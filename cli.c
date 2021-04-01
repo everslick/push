@@ -143,13 +143,16 @@ static void open_failed(const char *cmd) {
 
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
+  uint8_t n = 1;
 
-  printf("available commands are:" LF);
+  printf("available commands are:" LF " ");
 
   while (*ptr) {
-    printf(" %s" LF, ptr);
+    printf("%-8s", ptr);
+    if ((n++ % 4) == 0) printf(LF " ");
     ptr += strlen(ptr) + 1;
   }
+  if ((n % 4) == 0) printf(LF);
 
   printf(LF);
   printf("line editor keys are [ctrl]+[x]:" LF);
@@ -229,15 +232,21 @@ static void cmd_pwd(uint8_t argc, char **argv) {
 }
 
 static void cmd_mount(uint8_t argc, char **argv) {
+#ifdef C64
   unsigned char dev = getfirstdevice();
 
   while (dev != INVALID_DEVICE) {
     printf ("/dev/fd%d on /mnt/%d" LF, dev - 8, dev);
     dev = getnextdevice(dev);
   }
+#else
+  not_implemented("mount");
+#endif
 }
 
 static void cmd_cd(uint8_t argc, char **argv) {
+#ifdef HAVE_FILEIO
+#ifdef C64
   unsigned char dev = getfirstdevice();
   char buf[FILENAME_MAX], *dir = NULL;
 
@@ -246,11 +255,19 @@ static void cmd_cd(uint8_t argc, char **argv) {
   if (!dir || chdir(dir)) {
     perror("cd");
   }
+#else // !C64
+  if (chdir(argv[1])) {
+    perror("cd");
+  }
+#endif // !C64
+#else // HAVE_FILEIO
+  not_implemented("cd");
+#endif
 }
 
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t files = 0;
+  uint8_t files = 1;
 #ifdef __CBM__
   uint8_t dev = getcurrentdevice();
   struct cbm_dirent entry;
@@ -287,10 +304,10 @@ static void cmd_ls(uint8_t argc, char **argv) {
 
       textcolor(col);
       printf("%-19s", name);
-      if (files++ % 2) printf(LF);
+      if ((files++ % 2) == 0) printf(LF);
     }
 
-    if (files % 2) printf(LF);
+    if ((files % 2) == 0) printf(LF);
 
 #ifdef __CBM__
     cbm_closedir(1);
@@ -388,7 +405,9 @@ uint8_t cli_exec(char *cmd) {
   } else if (!strcmp(argv[0], "test")) {
     term_push_keys(input);
   } else {
+#ifdef C64
     exec(argv[0], NULL); // will not return if works
+#endif
 
     printf("%s: command not found" LF, argv[0]);
   }
