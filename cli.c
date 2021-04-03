@@ -13,9 +13,19 @@
 #include <cbm.h>
 #else
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #endif
 #endif
+
+// busybox
+#define LONE_DASH(s)       ((s)[0] == '-' && !(s)[1])
+#define NOT_LONE_DASH(s)   ((s)[0] != '-' || (s)[1])
+#define LONE_CHAR(s,c)     ((s)[0] == (c) && !(s)[1])
+#define NOT_LONE_CHAR(s,c) ((s)[0] != (c) || (s)[1])
+#define DOT_OR_DOTDOT(s)   ((s)[0] == '.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
+
+static char cwd[64];
 
 #ifdef KICKC
 
@@ -35,25 +45,14 @@ static const char commands[] = {
 #else
 
 static const char commands[] = {
-  "help\0"
-  "echo\0"
-  "parse\0"
-  "clear\0"
-  "reset\0"
-  "version\0"
-  "pwd\0" 
-  "mount\0" 
-  "cd\0" 
-  "ls\0" 
-  "mv\0" 
-  "rm\0" 
-  "test\0" 
-  "logout\0"
-  "exit\0"
+  "help\0"   "echo\0"    "parse\0"   "clear\0"
+  "reset\0"  "version\0" "pwd\0"     "mount\0" 
+  "cd\0"     "ls\0"      "mv\0"      "rm\0" 
+  "mkdir\0"  "test\0"    "logout\0"  "exit\0"
   "\0" // end marker
 
   // TODO
-  //"cat\0" "cp\0" "df\0" "dd\0" "ls\0" "mkfs\0"
+  //"cat\0" "cp\0" "df\0" "dd\0" "mkfs\0"
   //"mv\0" "rm\0" "tail\0" "touch\0" "hd\0" "tetris\0"
 };
 
@@ -121,6 +120,75 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   return (argc);
 }
 
+static uint8_t getflags(uint8_t argc, char **argv, const char *optstr) {
+  uint8_t i, flags = 0, n = strlen(optstr);
+  int opt;
+
+  if (n > 8) n = 8;
+
+  optind = 1;
+  while ((opt = getopt(argc, argv, optstr)) != -1) {
+    for (i=0; i<n; i++) {
+      if (opt == optstr[i]) flags |= (1<<i);
+    }
+  }
+
+  return (flags);
+}
+
+/* Find out if the last character of a string matches the one given.
+ * Don't underrun the buffer if the string length is 0.
+ */
+static char *last_char_is(const char *s, uint8_t c) {
+  if (s && *s) {
+    uint8_t sz = strlen(s) - 1;
+
+    s += sz;
+    if ((uint8_t)*s == c) {
+      return (char *)s;
+    }
+  }
+
+  return (NULL);
+}
+
+static char *get_last_path_component(const char *path) {
+  char *slash = strrchr(path, '/');
+
+  if (!slash || (slash == path && !slash[1])) {
+    return (char*)path;
+  }
+
+  return (slash + 1);
+}
+
+static const char *basename(const char *path) {
+  const char *s = strrchr(path, '/');
+
+  if (s) return (s + 1);
+
+  return (path);
+}
+
+static char *dirname(char *path) {
+  char *slash = last_char_is(path, '/');
+
+  if (slash) {
+    while (*slash == '/' && slash != path) {
+      *slash-- = '\0';
+    }
+  }
+
+  return (get_last_path_component(path));
+}
+
+#ifdef __CBM__
+static uint8_t send_drive_command(const char *str) {
+  cbm_open(1, 8, CBM_WRITE, str);
+  cbm_close(1);
+}
+#endif
+
 static void not_implemented(const char *cmd) {
   printf("%s: not implemented" LF, cmd);
 }
@@ -184,7 +252,7 @@ static void cmd_version(uint8_t argc, char **argv) {
   printf("push, version " VERSION LF); return;
 #endif
 #endif
-  not_implemented("version");
+  not_implemented(argv[0]);
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {
@@ -193,33 +261,127 @@ static void cmd_clear(uint8_t argc, char **argv) {
 
 static void cmd_rm(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  if (argc < 2) {
+  uint8_t flags = getflags(argc, argv, "?v");
+  char *path;
+
+  if (flags & 0x01) { // ?
+    printf("usage: %s [-v] name" LF, argv[0]);
+    return;
+  }
+
+  argv += optind;
+
+  if (!*argv) {
     missing_arg("rm");
-  } else {
-    if (remove(argv[1])) {
+    return;
+  }
+
+  do {
+    path = *argv;
+
+    if (flags & 0x02) { // verbose
+      printf("rm: removing '%s'" LF, path);
+    }
+
+    if (remove(path)) {
       perror("rm");
     }
-  }
+  } while (*++argv);
 #else
-  not_implemented("rm");
+  not_implemented(argv[0]);
 #endif
 }
 
 static void cmd_mv(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   if (argc < 3) {
-    missing_arg("rm");
+    missing_arg(argv[0]);
   } else {
     if (rename(argv[1], argv[2])) {
-      perror("mv");
+      perror(argv[0]);
     }
   }
 #else
-  not_implemented("mv");
+  not_implemented(argv[0]);
 #endif
 }
 
+static void cmd_mkdir(uint8_t argc, char **argv) {
+#ifdef HAVE_FILEIO
+  uint8_t flags = getflags(argc, argv, "?vp");
+  char *path;
+
+  if (flags & 0x01) { // ?
+    printf("usage: %s [-v] [-p] name" LF, argv[0]);
+    return;
+  }
+
+  argv += optind;
+
+  if (!*argv) {
+    missing_arg("mkdir");
+    return;
+  }
+
+  do {
+    path = *argv;
+
+    if (flags & 0x02) { // verbose
+      printf("mkdir: creating directory '%s'" LF, path);
+    }
+
+    int mode = 0777;
+    if (mkdir(path, mode)) {
+      perror("mkdir");
+    }
+  } while (*++argv);
+#else
+  not_implemented(argv[0]);
+#endif
+}
+
+static void cmd_rmdir(uint8_t argc, char **argv) {
+  uint8_t flags = getflags(argc, argv, "?vp");
+  char *path;
+
+  if (flags & 0x01) { // ?
+    printf("usage: %s [-v] [-p] name" LF, argv[0]);
+    return;
+  }
+
+  argv += optind;
+
+  if (!*argv) {
+    missing_arg("rmdir");
+    return;
+  }
+
+  do {
+    path = *argv;
+
+    if (flags & 0x02) { // verbose
+      printf("rmdir: removing directory '%s'" LF, path);
+    }
+
+    if (rmdir(path) < 0) {
+      //perror_msg("'%s'", path);  /* Match gnu rmdir msg. */
+      perror("rmdir");
+      return;
+    } else if (flags & 0x04) { // parents
+      /* Note: path was not "" since rmdir succeeded. */
+      path = dirname(path);
+      /* Path is now just the parent component.  Dirname
+       * returns "." if there are no parents.
+       */
+      if (NOT_LONE_CHAR(path, '.')) {
+        continue;
+      }
+    }
+  } while (*++argv);
+}
+
 static void cmd_pwd(uint8_t argc, char **argv) {
+#ifdef HAVE_FILEIO
   char buf[FILENAME_MAX], *pwd = NULL;
 
   pwd = getcwd(buf, sizeof (buf));
@@ -227,8 +389,11 @@ static void cmd_pwd(uint8_t argc, char **argv) {
   if (pwd) {
     printf(pwd);
   } else {
-    perror("pwd");
+    perror(argv[0]);
   }
+#else
+  not_implemented(argv[0]);
+#endif
 }
 
 static void cmd_mount(uint8_t argc, char **argv) {
@@ -253,15 +418,15 @@ static void cmd_cd(uint8_t argc, char **argv) {
   dir = getdevicedir(getfirstdevice(), buf, sizeof (buf));
 
   if (!dir || chdir(dir)) {
-    perror("cd");
+    perror(argv[0]);
   }
 #else // !C64
   if (chdir(argv[1])) {
-    perror("cd");
+    perror(argv[0]);
   }
 #endif // !C64
 #else // HAVE_FILEIO
-  not_implemented("cd");
+  not_implemented(argv[0]);
 #endif
 }
 
@@ -284,6 +449,11 @@ static void cmd_ls(uint8_t argc, char **argv) {
     perror("ls");
   } else {
 #ifdef __CBM__
+    if (cbm_readdir(1, &entry)) { // skip parent dir
+      cbm_closedir(1);
+      return;
+    }
+
     while (!cbm_readdir(1, &entry)) {
       const char *name = entry.name;
 #else
@@ -360,6 +530,8 @@ const char *term_hint_cb(lined_t *l) {
   if (!strcmp(c, "ls"))    return ("[<dir>]");
   if (!strcmp(c, "mv"))    return ("<old> <new>");
   if (!strcmp(c, "rm"))    return ("<name>");
+  if (!strcmp(c, "mkdir")) return ("<dir>");
+  if (!strcmp(c, "rmdir")) return ("<dir>");
   if (!strcmp(c, "mount")) return ("[<dir>] [<dev>]");
   if (!strcmp(c, "parse")) return ("[<arg1> <arg2> ...]");
   if (!strcmp(c, "echo"))  return ("[<text1> <text2>] ...");
@@ -388,6 +560,10 @@ uint8_t cli_exec(char *cmd) {
     cmd_mv(argc, argv);
   } else if (!strcmp(argv[0], "rm")) {
     cmd_rm(argc, argv);
+  } else if (!strcmp(argv[0], "mkdir")) {
+    cmd_mkdir(argc, argv);
+  } else if (!strcmp(argv[0], "rmdir")) {
+    cmd_rmdir(argc, argv);
   } else if (!strcmp(argv[0], "pwd")) {
     cmd_pwd(argc, argv);
   } else if (!strcmp(argv[0], "mount")) {
