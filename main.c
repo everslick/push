@@ -6,16 +6,36 @@
 #include "term.h"
 #include "cli.h"
 
-int main(void) {
-  lined_t *lined;
-  uint8_t reset;
+#include "push.h"
 
-#ifndef KICKC
-restart:
+uint8_t scratch[sizeof (scratch)];
+
+#ifdef LINUX
+static uint8_t reset_once_after_startup = 1;
 #endif
 
-  lined = NULL;
-  reset = 0;
+int main(void) {
+  lined_t *lined;
+  uint8_t logout;
+  uint8_t restart;
+
+#ifndef KICKC
+loop:
+#endif
+
+  lined   = NULL;
+  logout  = 0;
+  restart = 0;
+
+#ifdef LINUX
+  // workaround for mangled xterm after startup
+  if (reset_once_after_startup) {
+    reset_once_after_startup = 0;
+
+    restart = 1;
+    logout  = 1;
+  }
+#endif
 
   term_init();
 
@@ -23,8 +43,7 @@ restart:
     printf("push: out of memory" LF); return (1);
   }
 
-  lined_prompt(lined, "push:$ ");
-
+  textcolor(COLOR_CYAN);
   printf(
     "       ____  __  _______ __  __"  LF
     "      / __ \\/ / / / ___// / / /" LF
@@ -33,17 +52,13 @@ restart:
     "   / /    \\____//____/_/ / /"    LF
     "  /_/ petite un*x shell /_/"      LF
   );
-
-  printf(LF);
-  textcolor(COLOR_YELLOW);
-  //printf("w = %d" LF, lined->cols);
-  //printf("h = %d" LF, lined->rows);
   textcolor(COLOR_DEFAULT);
   printf(LF);
 
+  lined_prompt(lined, "push:$ ");
   lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
 
-  while (1) {
+  while (!logout) {
     uint8_t key = term_get_key(lined);
 
     lined_edit(lined, key);
@@ -57,19 +72,19 @@ restart:
       ret = cli_exec(cmd);
 
       if (ret == 1) {
-        break; // 'exit' or 'logout'
+        logout = 1;
       } else if (ret == 2) {
-        reset = 1; // reset
-        break;
+        restart = 1; // reset
+        logout = 1;
       }
 
       lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
     } else if (key == TERM_KEY_CTRL_C) {
       printf("break" LF);
-      break;
+      logout = 1;
     } else if (key == TERM_KEY_CTRL_D) {
       printf("exit" LF);
-      break;
+      logout = 1;
     }
   }
 
@@ -78,7 +93,7 @@ restart:
   term_fini();
 
 #ifndef KICKC
-  if (reset) goto restart;
+  if (restart) goto loop;
 #endif
 
   return (0);

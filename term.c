@@ -95,7 +95,6 @@ void term_init(void) {
   textcolor(COLOR_DEFAULT);
 
   cursor(1);
-
   clrscr();
 }
 
