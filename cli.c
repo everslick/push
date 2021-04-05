@@ -26,35 +26,12 @@
 
 #endif // HAVE_FILEIO
 
-// busybox
-#define LONE_DASH(s)       ((s)[0] == '-' && !(s)[1])
-#define NOT_LONE_DASH(s)   ((s)[0] != '-' || (s)[1])
-#define LONE_CHAR(s,c)     ((s)[0] == (c) && !(s)[1])
-#define NOT_LONE_CHAR(s,c) ((s)[0] != (c) || (s)[1])
-#define DOT_OR_DOTDOT(s)   ((s)[0] == '.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
-
-#ifdef KICKC
-
 static const char commands[] = {
-  'h','e','l','p', 0,
-  'e','c','h','o', 0,
-  'p','a','r','s','e',0,
-  'c','l','e','a','r', 0,
-  'r','e','s','e','t', 0,
-  'v','e','r','s','i','o','n', 0,
-  'u','p','t','i','m','e', 0,
-  'l','o','g','o','u','t', 0,
-  'e','x','i','t', 0,
-   0 // end marker
-};
-
-#else
-
-static const char commands[] = {
-  "help\0"   "echo\0"    "parse\0"   "clear\0"
-  "reset\0"  "version\0" "pwd\0"     "mount\0" 
-  "cd\0"     "ls\0"      "mv\0"      "rm\0" 
-  "mkdir\0"  "test\0"    "logout\0"  "exit\0"
+  "help\0"     "echo\0"     "parse\0"    "clear\0"
+  "reset\0"    "version\0"  "pwd\0"      "mount\0" 
+  "cd\0"       "ls\0"       "mv\0"       "rm\0" 
+  "realpath\0" "basename\0" "dirname\0"  "mkdir\0"
+  "test\0"     "logout\0"   "exit\0"
   "\0" // end marker
 
   // TODO
@@ -66,10 +43,11 @@ static const char input[] = {
   "help\r"
   "echo foo    bar     baz\r"
   "parse   this  is a test for   the argc/argv parser\r"
+  "dirname /foo/bar/baz.txt\r"
+  "basename /foo/bar/baz.txt\r"
+  "realpath ./foo/../bar/../foobar/baz.txt\r"
   "version\r"
 };
-
-#endif
 
 #define KEYS                           \
   " c=break b=left  l=cls  k=ceol"  LF \
@@ -77,20 +55,14 @@ static const char input[] = {
   " a=home  p=up    r=char w=cword" LF \
   " e=end   n=down  t=swap"         LF
 
-#ifdef KICKC
-#define STRT '\''
-#else
-#define STRT '"'
-#endif
-
 static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
   char *s = cmd, *t = s + strlen(s) - 1;
 
-  while ((t >= s) && (*t && (*t == ' '))) *t-- = 0; // trim end
+  while ((t >= s) && (*t && (*t == ' '))) *t-- = '\0'; // trim end
 
   for (i=0; i<args; i++) {
-    argv[i] = 0;
+    argv[i] = '\0';
   }
 
   while (*s) {
@@ -101,7 +73,7 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       while (*s && (*s == ' ')) s++;
 
       // skip quotation mark
-      if (*s && (*s == STRT)) { s++; quote ^= 1; }
+      if (*s && (*s == '"')) { s++; quote ^= 1; }
 
       // start next arg
       *argv++ = s;
@@ -111,12 +83,12 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
       }
     }
 
-    if (*s == STRT) {
-      *s++ = 0; // remove and skip
-      if (*s == STRT) first = 1;
+    if (*s == '"') {
+      *s++ = '\0'; // remove and skip
+      if (*s == '"') first = 1;
       quote ^= 1;
     } else if ((!quote) && (*s == ' ')) {
-      *s++ = 0; // remove and skip
+      *s++ = '\0'; // remove and skip
       first = 1;
     } else {
       s++;
@@ -144,50 +116,96 @@ static uint8_t getflags(uint8_t argc, char **argv, const char *optstr) {
   return (flags);
 }
 
-/* Find out if the last character of a string matches the one given.
- * Don't underrun the buffer if the string length is 0.
- */
 static char *last_char_is(const char *s, uint8_t c) {
   if (s && *s) {
     uint8_t sz = strlen(s) - 1;
 
     s += sz;
     if ((uint8_t)*s == c) {
-      return (char *)s;
+      return ((char *)s);
     }
   }
 
   return (NULL);
 }
 
-static char *get_last_path_component(const char *path) {
+static const char *last_path_element(const char *path) {
   char *slash = strrchr(path, '/');
 
   if (!slash || (slash == path && !slash[1])) {
-    return (char*)path;
+    return ((char*)path);
   }
 
   return (slash + 1);
 }
 
 static const char *basename(const char *path) {
-  const char *s = strrchr(path, '/');
+  const char *slash = strrchr(path, '/');
 
-  if (s) return (s + 1);
+  if (slash) return (slash + 1);
 
   return (path);
 }
 
-static char *dirname(char *path) {
-  char *slash = last_char_is(path, '/');
+static const char *dirname(const char *path) {
+  char *slash, *ptr = scratch;
+
+  strcpy(ptr, path);
+  slash = last_char_is(ptr, '/');
 
   if (slash) {
-    while (*slash == '/' && slash != path) {
+    while ((*slash == '/') && (slash != ptr)) {
       *slash-- = '\0';
     }
   }
 
-  return (get_last_path_component(path));
+  return (last_path_element(ptr));
+}
+
+static char *realpath(const char *path) {
+  uint8_t l, i, rel, sz = 0, ti = 0;
+  char buf[32], *tokv[8], *ptr;
+
+  strcpy(buf, path);
+  rel = (*path == '/') ? 0 : 1;
+
+  ptr = strtok(buf, "/");
+  while (ptr != NULL) {
+    if (strcmp(ptr, "..") == 0) {
+      if (ti > 0) {
+        ti--;
+      }
+    } else if (strcmp(ptr, ".") != 0) {
+      tokv[ti++] = ptr;
+
+      if (ti >= 8) return (NULL);
+    }
+    ptr = strtok(NULL, "/");
+  }
+
+  ptr = &scratch[0];
+  for (i=0; i<ti; i++) {
+    l = strlen(tokv[i]);
+
+    if (i > 0 || !rel) {
+      if (++sz >= sizeof (scratch)) return (NULL);
+      *ptr++ = '/';
+    }
+
+    sz += l;
+    if (sz >= sizeof (scratch)) return (NULL);
+
+    strcpy(ptr, tokv[i]);
+    ptr += l;
+  }
+
+  if (ptr == &scratch[0]) {
+    if (++sz >= sizeof (scratch)) return (NULL);
+    *ptr++ = rel ? '.' : '/';
+  }
+  *ptr = '\0';
+
+  return (&scratch[0]);
 }
 
 static void not_implemented(const char *cmd) {
@@ -213,11 +231,11 @@ static void cmd_help(uint8_t argc, char **argv) {
   printf("available commands are:" LF " ");
 
   while (*ptr) {
-    printf("%-8s", ptr);
-    if ((n++ % 4) == 0) printf(LF " ");
+    printf("%-10s", ptr);
+    if ((n++ % 3) == 0) printf(LF " ");
     ptr += strlen(ptr) + 1;
   }
-  if ((n % 4) == 0) printf(LF);
+  if ((n % 3) == 0) printf(LF);
 
   printf(LF);
   printf("line editor keys are [ctrl]+[x]:" LF);
@@ -260,10 +278,11 @@ static void cmd_mv(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   if (argc < 3) {
     missing_arg(*argv);
-  } else {
-    if (rename(argv[1], argv[2])) {
-      perror(*argv);
-    }
+    return;
+  }
+
+  if (rename(argv[1], argv[2])) {
+    perror(*argv);
   }
 #else
   not_implemented(*argv);
@@ -403,6 +422,33 @@ static void cmd_pwd(uint8_t argc, char **argv) {
 #endif
 }
 
+static void cmd_realpath(uint8_t argc, char **argv) {
+  if (argc < 2) {
+    missing_arg(*argv);
+    return;
+  }
+
+  printf("%s" LF, realpath(argv[1]));
+}
+
+static void cmd_basename(uint8_t argc, char **argv) {
+  if (argc < 2) {
+    missing_arg(*argv);
+    return;
+  }
+
+  printf("%s" LF, basename(argv[1]));
+}
+
+static void cmd_dirname(uint8_t argc, char **argv) {
+  if (argc < 2) {
+    missing_arg(*argv);
+    return;
+  }
+
+  printf("%s" LF, dirname(argv[1]));
+}
+
 static void cmd_mount(uint8_t argc, char **argv) {
 #ifdef C64
   unsigned char dev = getfirstdevice();
@@ -418,22 +464,15 @@ static void cmd_mount(uint8_t argc, char **argv) {
 
 static void cmd_cd(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-
-#ifdef __CBM__
- #ifdef HAVE_SDIEC
-  if (sdiec_cd(argv[1])) {
-    sdiec_error("cd");
+  if (argc < 2) {
+    missing_arg(*argv);
+    return;
   }
- #else // HAVE_SDIEC
-  unsigned char dev = getfirstdevice();
-  char buf[FILENAME_MAX], *dir = NULL;
 
-  dir = getdevicedir(getfirstdevice(), buf, sizeof (buf));
-
-  if (!dir || chdir(dir)) {
-    perror(*argv);
+#ifdef HAVE_SDIEC
+  if (sdiec_chdir(argv[1])) {
+    sdiec_error(*argv);
   }
- #endif // HAVE_SDIEC
 #else // __CBM__
   if (chdir(argv[1])) {
     perror(*argv);
@@ -541,15 +580,17 @@ const char *term_hint_cb(lined_t *l) {
   // remove all the leading spaces
   while (c && (*c == ' ')) c++;
 
-  if (!strcmp(c, "cd"))    return ("[<dir>]");
-  if (!strcmp(c, "ls"))    return ("[<dir>]");
-  if (!strcmp(c, "mv"))    return ("<old> <new>");
-  if (!strcmp(c, "rm"))    return ("<name>");
-  if (!strcmp(c, "mkdir")) return ("<dir>");
-  if (!strcmp(c, "rmdir")) return ("<dir>");
-  if (!strcmp(c, "mount")) return ("[<dir>] [<dev>]");
-  if (!strcmp(c, "parse")) return ("[<arg1> <arg2> ...]");
-  if (!strcmp(c, "echo"))  return ("[<text1> <text2>] ...");
+  if (!strcmp(c, "cd"))       return ("<path>");
+  if (!strcmp(c, "mv"))       return ("<old> <new>");
+  if (!strcmp(c, "rm"))       return ("<name>");
+  if (!strcmp(c, "mkdir"))    return ("<dir>");
+  if (!strcmp(c, "rmdir"))    return ("<dir>");
+  if (!strcmp(c, "realpath")) return ("<path>");
+  if (!strcmp(c, "basename")) return ("<path>");
+  if (!strcmp(c, "dirname"))  return ("<path>");
+  if (!strcmp(c, "mount"))    return ("[<dir>] [<dev>]");
+  if (!strcmp(c, "parse"))    return ("[<arg1> <arg2> ...]");
+  if (!strcmp(c, "echo"))     return ("[<text1> <text2>] ...");
 
   return (NULL);
 }
@@ -581,6 +622,12 @@ uint8_t cli_exec(char *cmd) {
     cmd_rmdir(argc, argv);
   } else if (!strcmp(*argv, "pwd")) {
     cmd_pwd(argc, argv);
+  } else if (!strcmp(*argv, "realpath")) {
+    cmd_realpath(argc, argv);
+  } else if (!strcmp(*argv, "basename")) {
+    cmd_basename(argc, argv);
+  } else if (!strcmp(*argv, "dirname")) {
+    cmd_dirname(argc, argv);
   } else if (!strcmp(*argv, "mount")) {
     cmd_mount(argc, argv);
   } else if (!strcmp(*argv, "clear")) {
