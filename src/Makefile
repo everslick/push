@@ -1,10 +1,10 @@
 PROGRAM  = push
-VERSION  = 0.0.1
+VERSION  = 0.0.2
 SOURCES  = main.c term.c lined.c cli.c
 
-export PATH=../zesarux/src:../kickc/bin:../z88dk/bin:$(shell echo $$PATH)
-export ZCCCFG=../z88dk/lib/config/
-export CC65_HOME=../cc65/
+export PATH=../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
+export ZCCCFG=../../z88dk/lib/config/
+export CC65_HOME=../../cc65/
 
 DEFINES  = -DVERSION=\"$(VERSION)\"
 TARGET   = $(PROGRAM)-$(MACHINE)

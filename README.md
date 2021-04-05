@@ -38,9 +38,8 @@ toolchains will provide those APIs.
 ### Disclaimer
 
 Please keep in mind, that **push** is, at its current state, an experiment
-(proof-of-concept) and not of any practical use, e.g. it lacks the ability
-to launch other programs, what could be considered a slight hinderence for
-widspread adoption.
+(proof-of-concept) and not of much practical use. Nevertheless it is fun to
+see the `test` command do its work, so give it a shot.
 
 ### Compilation
 
@@ -51,7 +50,7 @@ push source like this:
 cc65/  kickc/  push/  z88dk/
 ```
 
-The Makefile contains various targets for compiling and testing:
+The Makefile in `./src` contains various targets for compiling and testing:
 
 * **make** (build linux binary)
 * **make c64** (build C64 prg)

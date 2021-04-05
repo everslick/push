@@ -56,8 +56,7 @@ static const char input[] = {
   "version\r"
   "echo bye!\r"
   "sleep 5\r"
-  //"reset\r"
-  "sleep 1\r"
+  "reset\r"
 };
 
 #define KEYS                           \
