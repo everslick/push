@@ -8,7 +8,7 @@
 
 #include "push.h"
 
-uint8_t scratch[sizeof (scratch)];
+char scratch[sizeof (scratch)];
 
 #ifdef LINUX
 static uint8_t reset_once_after_startup = 1;
