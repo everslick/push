@@ -19,6 +19,8 @@ static int8_t errnum;
 #include <stdlib.h>
 #include <string.h>
 
+//#define VERBOSE
+
 static int8_t snd_drv_cmd(const char *format, ...) {
   uint8_t s = 3, d = 0;
   va_list args;
@@ -29,7 +31,9 @@ static int8_t snd_drv_cmd(const char *format, ...) {
   va_end(args);
 
   n = cbm_open(15, 8, 15, scratch);
+#ifdef VERBOSE
   printf("sending: '%s'" LF, scratch);
+#endif
 
   if (n < 0) {
     errnum = n;
@@ -47,7 +51,9 @@ static int8_t snd_drv_cmd(const char *format, ...) {
     return (-2); // read failed
   }
 
+#ifdef VERBOSE
   printf("reading: %s", scratch);
+#endif
 
   errnum = ((scratch[0] - '0') * 10) + (scratch[1] - '0');
 
@@ -56,7 +62,9 @@ static int8_t snd_drv_cmd(const char *format, ...) {
   while (s < n) errstr[d++] = scratch[s++];
   errstr[d] = '\0';
 
+#ifdef VERBOSE
   printf("status: '%s' (%u)" LF, errstr, errnum);
+#endif
 
 	cbm_close(15);
 

@@ -155,7 +155,9 @@ uint8_t term_get_key(lined_t *l) {
   uint8_t c = keys ? *keys++ : cgetc();
 
   // end of input stream
-  if (keys && (*keys == 0)) keys = NULL;
+  if (keys && (*keys == 0)) {
+    keys = NULL;
+  }
 
 #ifdef HAVE_OSD
   key = c;
@@ -168,6 +170,7 @@ uint8_t term_get_key(lined_t *l) {
   if (c == 148) c = TERM_KEY_DELETE; // SHIFT-BACKSPACE
   if (c == 131) c = TERM_KEY_TAB;    // SHIFT-ESCAPE
   if (c ==  94) c = TERM_KEY_TAB;    // SHIFT-TILDE
+  if (c ==  26) c = TERM_KEY_TAB;    // CTRL-Z
   if (c ==  19) c = TERM_KEY_CTRL_A; // HOME
   if (c == 145) c = TERM_KEY_CTRL_P; // UP
   if (c ==  17) c = TERM_KEY_CTRL_N; // DOWN
@@ -194,10 +197,15 @@ uint8_t term_get_key(lined_t *l) {
   if (c == TERM_KEY_CTRL_O) {
     osd ^= 1;
 
-    if (!osd) hide_osd(l);
+    if (!osd) {
+      hide_osd(l);
+    }
   }
 
-  if (osd) show_osd(l);
+  if (osd) {
+    show_osd(l);
+    textcolor(COLOR_DEFAULT);
+  }
 #endif
 
   return (c);

@@ -24,4 +24,6 @@ uint8_t textcolor(uint8_t color);
 uint8_t bgcolor(uint8_t color);
 uint8_t bordercolor(uint8_t color);
 
+uint8_t kbhit(void);
+
 #endif // _CONDRV_H_

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "lined.h"
@@ -27,26 +28,36 @@
 #endif // HAVE_FILEIO
 
 static const char commands[] = {
-  "help\0"     "echo\0"     "parse\0"    "clear\0"
+  "help\0"     "echo\0"     "sleep\0"    "clear\0"
   "reset\0"    "version\0"  "pwd\0"      "mount\0" 
   "cd\0"       "ls\0"       "mv\0"       "rm\0" 
   "realpath\0" "basename\0" "dirname\0"  "mkdir\0"
-  "test\0"     "logout\0"   "exit\0"
+  "parse\0"    "test\0"     "logout\0"   "exit\0"
   "\0" // end marker
-
-  // TODO
-  //"cat\0" "cp\0" "df\0" "dd\0" "mkfs\0"
-  //"tail\0" "touch\0" "hd\0" "tetris\0"
 };
 
 static const char input[] = {
   "help\r"
+  "sleep 2\r"
+  "clear\r"
   "echo foo    bar     baz\r"
-  "parse   this  is a test for   the argc/argv parser\r"
+  "parse   this  is a    test for the    \" very fine \"  argc/argv  parser\r"
   "dirname /foo/bar/baz.txt\r"
   "basename /foo/bar/baz.txt\r"
   "realpath ./foo/../bar/../foobar/baz.txt\r"
+  "ls\r"
+  "mkdir foo\r"
+  "cd foo\r"
+  "ls\r"
+  "mkdir bar\r"
+  "ls\r"
+  "rmdir bar\r"
+  "ls\r"
   "version\r"
+  "echo bye!\r"
+  "sleep 5\r"
+  //"reset\r"
+  "sleep 1\r"
 };
 
 #define KEYS                           \
@@ -99,9 +110,10 @@ static uint8_t parse(char *cmd, char **argv, uint8_t args) {
 }
 
 static uint8_t getflags(uint8_t argc, char **argv, const char *optstr) {
-  uint8_t i, flags = 0, n = strlen(optstr);
+  uint8_t n, i, flags = 0;
   int opt;
 
+  n = strlen(optstr);
   if (n > 8) n = 8;
 
   // reset global option index
@@ -150,7 +162,7 @@ static const char *basename(const char *path) {
   return (path);
 }
 
-static char *realpath(const char *path) {
+static char *realpath(const char *path, char *unused) {
   uint8_t l, i, rel, sz = 0, ti = 0;
   char buf[32], *tokv[8], *ptr;
 
@@ -198,14 +210,6 @@ static char *realpath(const char *path) {
 
 static void not_implemented(const char *cmd) {
   printf("%s: not implemented" LF, cmd);
-}
-
-static void not_found(const char *cmd) {
-  printf("%s: no such file or directory" LF, cmd);
-}
-
-static void dir_not_found(const char *cmd) {
-  printf("%s: directory not found" LF, cmd);
 }
 
 static void missing_arg(const char *cmd) {
@@ -262,6 +266,15 @@ static void cmd_clear(uint8_t argc, char **argv) {
   term_clear_screen();
 }
 
+static void cmd_sleep(uint8_t argc, char **argv) {
+  if (argc < 2) {
+    missing_arg(*argv);
+    return;
+  }
+
+  sleep(atoi(argv[1]));
+}
+
 static void cmd_mv(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   if (argc < 3) {
@@ -279,8 +292,10 @@ static void cmd_mv(uint8_t argc, char **argv) {
 
 static void cmd_rm(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t flags = getflags(argc, argv, "?v");
+  uint8_t flags;
   char *path;
+
+  flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name" LF, *argv);
@@ -312,8 +327,10 @@ static void cmd_rm(uint8_t argc, char **argv) {
 
 static void cmd_mkdir(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t flags = getflags(argc, argv, "?v");
+  uint8_t flags;
   char *path;
+
+  flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name" LF, *argv);
@@ -353,8 +370,10 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
 
 static void cmd_rmdir(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t flags = getflags(argc, argv, "?v");
+  uint8_t flags;
   char *path;
+
+  flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name" LF, *argv);
@@ -416,7 +435,7 @@ static void cmd_realpath(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s" LF, realpath(argv[1]));
+  printf("%s" LF, realpath(argv[1], NULL));
 }
 
 static void cmd_basename(uint8_t argc, char **argv) {
@@ -579,6 +598,7 @@ const char *term_hint_cb(lined_t *l) {
   if (!strcmp(c, "mount"))    return ("[<dir>] [<dev>]");
   if (!strcmp(c, "parse"))    return ("[<arg1> <arg2> ...]");
   if (!strcmp(c, "echo"))     return ("[<text1> <text2>] ...");
+  if (!strcmp(c, "sleep"))    return ("<sec>");
 
   return (NULL);
 }
@@ -620,6 +640,8 @@ uint8_t cli_exec(char *cmd) {
     cmd_mount(argc, argv);
   } else if (!strcmp(*argv, "clear")) {
     cmd_clear(argc, argv);
+  } else if (!strcmp(*argv, "sleep")) {
+    cmd_sleep(argc, argv);
   } else if (!strcmp(*argv, "echo")) {
     cmd_echo(argc, argv);
   } else if (!strcmp(*argv, "version")) {

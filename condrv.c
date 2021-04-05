@@ -274,3 +274,7 @@ int vcprintf(const char *format, va_list ap) {
 
   return (ret);
 }
+
+uint8_t kbhit(void) {
+  return (0);
+}
