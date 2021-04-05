@@ -116,27 +116,30 @@ static uint8_t getflags(uint8_t argc, char **argv, const char *optstr) {
   return (flags);
 }
 
-static char *last_char_is(const char *s, uint8_t c) {
-  if (s && *s) {
-    uint8_t sz = strlen(s) - 1;
+static const char *dirname(const char *path) {
+  char *s, *slash = NULL, *ptr = scratch;
 
-    s += sz;
-    if ((uint8_t)*s == c) {
-      return ((char *)s);
+  strcpy(ptr, path);
+
+  s = ptr + strlen(ptr) - 1;
+  if (*s == '/') slash = s;;
+
+  if (slash) {
+    while ((*slash == '/') && (slash != ptr)) {
+      *slash-- = '\0';
     }
   }
 
-  return (NULL);
-}
+  slash = strrchr(ptr, '/');
 
-static const char *last_path_element(const char *path) {
-  char *slash = strrchr(path, '/');
-
-  if (!slash || (slash == path && !slash[1])) {
-    return ((char*)path);
+  if (slash && (slash != ptr)) {
+    *slash = '\0';
+  } else {
+    if (*ptr != '/') *ptr = '.';
+    ptr[1] = '\0';
   }
 
-  return (slash + 1);
+  return (ptr);
 }
 
 static const char *basename(const char *path) {
@@ -145,21 +148,6 @@ static const char *basename(const char *path) {
   if (slash) return (slash + 1);
 
   return (path);
-}
-
-static const char *dirname(const char *path) {
-  char *slash, *ptr = scratch;
-
-  strcpy(ptr, path);
-  slash = last_char_is(ptr, '/');
-
-  if (slash) {
-    while ((*slash == '/') && (slash != ptr)) {
-      *slash-- = '\0';
-    }
-  }
-
-  return (last_path_element(ptr));
 }
 
 static char *realpath(const char *path) {
@@ -183,7 +171,7 @@ static char *realpath(const char *path) {
     ptr = strtok(NULL, "/");
   }
 
-  ptr = &scratch[0];
+  ptr = scratch;
   for (i=0; i<ti; i++) {
     l = strlen(tokv[i]);
 
@@ -199,13 +187,13 @@ static char *realpath(const char *path) {
     ptr += l;
   }
 
-  if (ptr == &scratch[0]) {
+  if (ptr == scratch) {
     if (++sz >= sizeof (scratch)) return (NULL);
     *ptr++ = rel ? '.' : '/';
   }
   *ptr = '\0';
 
-  return (&scratch[0]);
+  return (scratch);
 }
 
 static void not_implemented(const char *cmd) {
