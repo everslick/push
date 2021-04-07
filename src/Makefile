@@ -6,7 +6,7 @@ export PATH=../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PAT
 export ZCCCFG=../../z88dk/lib/config/
 export CC65_HOME=../../cc65/
 
-DEFINES  = -DVERSION=\"$(VERSION)\"
+DEFINES  = -DVERSION=$(VERSION)
 TARGET   = $(PROGRAM)-$(MACHINE)
 
 # native
@@ -66,7 +66,8 @@ endif
 
 ifeq ($(MACHINE),zxn)
 DEFINES += -DZXN
-#SOURCES += zxnext.c
+CFLAGS  += -lesxdos -O3 -clib=classic
+SOURCES += zxnext.c
 endif
 
 ifdef TEST
@@ -74,6 +75,8 @@ PROGRAM = test
 SOURCES = test.c
 SOURCE  = test.c
 endif
+
+DEFINES += -DTOOLCHAIN=$(SDK) -DMACHINE=$(MACHINE)
 
 ########################################
 

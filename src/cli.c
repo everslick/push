@@ -27,6 +27,9 @@
 
 #endif // HAVE_FILEIO
 
+#define _mkstr_(_s_)  #_s_                                                      
+#define mkstr(_s_)    _mkstr_(_s_)
+
 static const char commands[] = {
   "help\0"     "echo\0"     "sleep\0"    "clear\0"
   "reset\0"    "version\0"  "pwd\0"      "mount\0" 
@@ -255,12 +258,7 @@ static void cmd_echo(uint8_t argc, char **argv) {
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
-#ifndef ZXN
-#ifndef ZX
-  printf("push, version " VERSION LF); return;
-#endif // ZX
-#endif // ZXN
-  not_implemented(*argv);
+  printf("push, version " mkstr(VERSION) " (" mkstr(MACHINE) "-" mkstr(TOOLCHAIN) ")" LF);
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {
