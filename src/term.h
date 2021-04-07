@@ -7,9 +7,6 @@
  #include "linux.h"
 #endif
 
-#ifdef C64
-#endif
-
 #ifdef ZX
  #include "zxspec.h"
 #endif

@@ -12,11 +12,9 @@
 
 #define COLOR_DEFAULT      4
 
-#define LF "\n"
+#define LF "\r"
 
-#include <stdint.h>
-
-uint8_t cursor(uint8_t onoff);
-uint8_t bgcolor(uint8_t color);
+#define bgcolor textbackground
+#define cursor(_ONOFF_)
 
 #endif // _ZXSPEC_H_

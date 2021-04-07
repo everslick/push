@@ -42,15 +42,16 @@ static void show_osd(lined_t *l) {
   uint8_t w = l->cols, h = l->rows, x = wherex(), y = wherey();
 
   textcolor(COLOR_YELLOW);
+
   gotoxy(w-7, 1); cprintf("k = %3u", key);
-  gotoxy(w-7, 2); cprintf("x = %3u", x);
+  gotoxy(w-7, 2); cprintf("x = %3u", l->plen + l->pos);
   gotoxy(w-7, 3); cprintf("y = %3u", y);
   gotoxy(w-7, 4); cprintf("w = %3u", w);
   gotoxy(w-7, 5); cprintf("h = %3u", h);
 
   gotoxy(x, y);
 }
-#endif
+#endif // HAVE_OSD
 
 static void show_hint(lined_t *l) {
 #ifdef HAVE_HINTS
@@ -77,17 +78,8 @@ void term_init(void) {
   linux_init();
 #endif
 
-#ifdef C64
-#endif
-
 #ifdef M65
   togglecase();
-#endif
-
-#ifdef ZX
-  // 32 column mode
-  cputc(1);
-  cputc(32);
 #endif
 
   bordercolor(COLOR_BLACK);
@@ -110,11 +102,6 @@ void term_clear_screen(void) {
 
 void term_screen_size(uint8_t *cols, uint8_t *rows) {
   screensize(cols, rows);
-
-#ifdef ZX
-  // 32 column mode
-  *cols >>= 1;
-#endif
 }
 
 /* Rewrite the currently edited line accordingly to the buffer content,
@@ -127,7 +114,7 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
 
   /* Write the prompt */
   textcolor(COLOR_RED);
-  for (i=0; i<l->plen; i++) cputc(l->prompt[i]);
+  cprintf(l->prompt);
 
   /* Write the current buffer content */
   textcolor(COLOR_WHITE);
@@ -148,7 +135,7 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
   textcolor(COLOR_DEFAULT);
 
   /* Move cursor to original position */
-  gotoxy(pos + l->plen, y);
+  gotoxy(l->plen + pos, y);
 }
 
 uint8_t term_get_key(lined_t *l) {
@@ -219,8 +206,7 @@ void term_make_beep(void) {
   waitvsync(); waitvsync();
   bordercolor(COLOR_BLACK);
 #else
-  printf("\x7");
-  fflush(stdout);
+  cputs("\x7");
 #endif
 }
 

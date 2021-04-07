@@ -219,7 +219,7 @@ static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
   uint8_t n = 1;
 
-  printf("available commands are:" LF " ");
+  printf("available commands:" LF " ");
 
   while (*ptr) {
     printf("%-10s", ptr);
@@ -229,7 +229,7 @@ static void cmd_help(uint8_t argc, char **argv) {
   if ((n % 3) == 0) printf(LF);
 
   printf(LF);
-  printf("line editor keys are [ctrl]+[x]:" LF);
+  printf("line editor keys ([ctrl]+[x]):" LF);
   printf(KEYS);
   printf(LF);
 }

@@ -1,7 +1,6 @@
-#ifndef _CONDRV_H_
-#define _CONDRV_H_
+#ifndef _SCREEN_H_
+#define _SCREEN_H_
 
-#include <stdarg.h>
 #include <stdint.h>
 
 void clrscr(void);
@@ -16,14 +15,9 @@ void cputc(char c);
 void cputs(const char *s);
 char cgetc(void);
 
-int cprintf(const char *format, ...);
-int vcprintf(const char *format, va_list ap);
-
 uint8_t cursor(uint8_t onoff);
 uint8_t textcolor(uint8_t color);
 uint8_t bgcolor(uint8_t color);
 uint8_t bordercolor(uint8_t color);
 
-uint8_t kbhit(void);
-
-#endif // _CONDRV_H_
+#endif // _SCREEN_H_

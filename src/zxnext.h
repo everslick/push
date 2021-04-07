@@ -12,11 +12,6 @@
 
 #define COLOR_DEFAULT      4
 
-#define LF "\n"
-
-#include <stdint.h>
-
-uint8_t cursor(uint8_t onoff);
-uint8_t bgcolor(uint8_t color);
+#define LF "\r"
 
 #endif // _ZXNEXT_H_

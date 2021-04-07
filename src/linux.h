@@ -12,14 +12,16 @@
 
 #define COLOR_DEFAULT         9
 
-// printf should go through cprintf
-#define printf cprintf
-
+#include <stdarg.h>
 #include <stdint.h>
 
-#include "condrv.h"
+#include "screen.h"
+
+#define printf cprintf
 
 uint8_t linux_init(void);
 void    linux_fini(void);
+
+int cprintf(const char *format, ...);
 
 #endif // _LINUX_H_

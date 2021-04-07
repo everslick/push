@@ -17,7 +17,7 @@ TARGET   = $(PROGRAM)
 CFLAGS   = -MMD -MP -O -g3 -Wno-format-security
 DEFINES += -DGCC -DLINUX -DHAVE_FILEIO
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION -DHAVE_OSD
-SOURCES += condrv.c linux.c
+SOURCES += linux.c
 endif
 
 ifeq ($(SDK),cc65)
@@ -40,10 +40,10 @@ endif
 ifeq ($(SDK),z88dk)
 BIN      = $(TARGET)
 CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include
-CFLAGS  += -L../z88dk/lib
+CFLAGS  += -L../../z88dk/lib
 CFLAGS  += -pragma-define:CLIB_EXIT_STACK_SIZE=0
 CFLAGS  += -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
-DEFINES += -DZ88DK -DHAVE_CONIO -DAMALLOC 
+DEFINES += -DZ88DK -DAMALLOC -DHAVE_CONIO
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
 endif
 
@@ -57,16 +57,16 @@ DEFINES += -DM65
 endif
 
 ifeq ($(MACHINE),zx)
-CFLAGS  += -pragma-redirect:fputc_cons=fputc_cons_native
-CFLAGS  += -pragma-redirect=CRT_FONT=_font_8x8_bbc_system
-DEFINES += -DZX
-CFLAGS  += -lndos
-SOURCES += zxspec.c
+CFLAGS  += -pragma-define:ansicolumns=$(COLS)
+CFLAGS  += -pragma-need=ansiterminal
+DEFINES += -DZX -DCOLUMNS=$(COLS)
+CFLAGS  += -lesxdos -O3
+#SOURCES += zxspec.c
 endif
 
 ifeq ($(MACHINE),zxn)
 DEFINES += -DZXN
-SOURCES += zxnext.c
+#SOURCES += zxnext.c
 endif
 
 ifdef TEST
@@ -90,8 +90,11 @@ kickc:
 z88dk:
 	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
+zx64:
+	$(MAKE) SDK=z88dk MACHINE=zx COLS=64 z88dk
+
 zx:
-	$(MAKE) SDK=z88dk MACHINE=zx z88dk
+	$(MAKE) SDK=z88dk MACHINE=zx COLS=32 z88dk
 
 zxn:
 	$(MAKE) SDK=z88dk MACHINE=zxn z88dk
@@ -111,11 +114,14 @@ c64emu: clean c64
 m65emu: clean m65
 	xmega65 -besure -prg main.prg
 
+zx64emu: clean zx64
+	zesarux --romfile ../../48.rom --machine 48k $(PROGRAM)-zx.tap
+
 zxemu: clean zx
-	zesarux --romfile ../48.rom --machine 48k $(PROGRAM)-zx.tap
+	zesarux --romfile ../../48.rom --machine 48k $(PROGRAM)-zx.tap
 
 zxnemu: clean zxn
-	zesarux --romfile ../next.rom --machine TBBlue $(PROGRAM)-zxn.tap
+	zesarux --romfile ../../next.rom --machine TBBlue $(PROGRAM)-zxn.tap
 
 ########################################
 
@@ -130,7 +136,7 @@ $(TARGET): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o $(BIN) $^
 
 clean:
-	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin
+	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf
 
 distclean: clean
 	$(RM) $(BIN) *.prg *.tap test push-zx
