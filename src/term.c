@@ -167,16 +167,19 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len) {
   if (osd) show_osd(l);
 #endif
 
+  /* Calculate screen X position. */
+  x = l->plen + l->xpos;
+
   /* Move cursor to original position */
-  gotoxy(l->plen + l->xpos, y);
+  gotoxy(x, y);
 
 #ifdef ZX
   /* Draw software cursor. */
   if (l->key != TERM_KEY_ENTER) {
     textbackground(COLOR_PURPLE);
-    cputc(' ');
-    gotoxy(l->plen + l->xpos, y);
-    (COLOR_BLACK);
+    textcolor(COLOR_WHITE);
+    cputc((l->pos < l->len) ? l->buf[l->pos] : ' ');
+    gotoxy(x, y);
   }
 
   textbackground(COLOR_BLACK);
