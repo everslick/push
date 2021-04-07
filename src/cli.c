@@ -184,7 +184,7 @@ static const char *basename(const char *path) {
 
 static char *realpath(const char *path, char *unused) {
   uint8_t l, i, rel, sz = 0, ti = 0;
-  char buf[32], *tokv[8], *ptr;
+  char buf[64], *tokv[8], *ptr;
 
   strcpy(buf, path);
   rel = (*path == '/') ? 0 : 1;
