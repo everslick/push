@@ -1,6 +1,6 @@
 ## push
 
-**The petite Un\*x shell.**
+**The Petite Un\*x Shell.**
 
 ![push-c64](https://user-images.githubusercontent.com/1909551/113136556-ca459300-9223-11eb-81ac-aa7be3cb86ae.png)
 
@@ -12,8 +12,8 @@ systems. It is built on top of a stripped down version of the
 library.
 
 **push** thus inherits *TAB completion*, *history* and *hints*
-(suggestions at the right of the prompt as you type). Additionally
-it provides rich line editing feautures like cursor movment, inserting
+(suggestions at the right of the prompt as you type) while
+providiing rich line editing feautures like cursor movment, inserting
 text at the current cursor position, jumping to the first (HOME) or
 last (END) position of the input buffer, deleting the last word and
 more.
@@ -25,32 +25,33 @@ GNU/Linux (gcc) for easy testing and development, and can be cross
 compiled for:
 
 * [C64](wikipedia.org/wiki/Commodore_64) with [cc65](cc65.org)
-* [MEGA65](mega65.org) with [kickc](gitlab.com/camelot/kickc)
 * [ZX Spectrum](wikipedia.org/wiki/ZX_Spectrum) with [z88dk](z88dk.org)
 * [Spectrum Next](www.specnext.com/about/) with [z88dk](z88dk.org)
+* ~[MEGA65](mega65.org) with [kickc](gitlab.com/camelot/kickc)~
 
 While it builds successfully for all those target platforms, it is only
-really working well on linux and C64. The main reason is lacking/broken
-support for some features from the C runtime libraries on some platforms,
-most important CONIO and heap management. Hopefully over time the
-toolchains will provide those APIs.
+really working well on Linux and C64 (and most recently on ZX-Zpectrum).
+The main reason is lacking/broken support for some features from the C
+runtime libraries on some platforms, most important CONIO and heap
+management. Hopefully over time the toolchains will provide those APIs.
 
 ### Disclaimer
 
-Please keep in mind, that **push** is, at its current state, an experiment
+Please keep in mind, that **push**, at its current state, is an experiment
 (proof-of-concept) and not of much practical use. Nevertheless it is fun to
 see the `test` command do its work, so give it a shot.
 
 ### Compilation
 
 You need the toolchain you want to build with installed parallel to the
-push source like this:
+**push** source like this:
 
 ```
 cc65/  kickc/  push/  z88dk/
 ```
 
-The Makefile in `./src` contains various targets for compiling and testing:
+The Makefile in `./push/src` contains various targets for compiling and
+testing:
 
 * **make** (build linux binary)
 * **make c64** (build C64 prg)
