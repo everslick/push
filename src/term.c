@@ -18,9 +18,6 @@ static void togglecase(void) {
 #endif
 }
 
-static void waitvsync(void) {
-}
-
 static void clear(uint8_t length) {
   uint8_t i;
 
@@ -103,12 +100,6 @@ void term_init(void) {
 
 #ifdef M65
   togglecase();
-#endif
-
-#ifdef ZX
-#ifdef HAVE_OSD
-  osd = 1;
-#endif
 #endif
 
   bordercolor(COLOR_BLACK);
@@ -207,6 +198,20 @@ uint8_t term_get_key(lined_t *l) {
 
 #ifdef ZX
   if (c ==  12) c = TERM_KEY_BACKSPACE;
+  if (c ==  14) c = TERM_KEY_TAB;
+  if (c == 205) c = TERM_KEY_CTRL_D;
+  if (c == 199) c = TERM_KEY_CTRL_C; // TERM_KEY_CTRL_Q; // BREAK
+  if (c == 201) c = TERM_KEY_CTRL_O; // TERM_KEY_CTRL_W; // OSD
+
+  if (c == 226) c = TERM_KEY_CTRL_A; // HOME
+  if (c == 200) c = TERM_KEY_CTRL_E; // END
+
+  if (c == 195) c = TERM_KEY_DELETE; // TERM_KEY_CTRL_S; // DELETE
+  if (c == 198) c = TERM_KEY_CTRL_B; // TERM_KEY_CTRL_Y; // LEFT
+  if (c == 172) c = TERM_KEY_CTRL_F; // TERM_KEY_CTRL_I; // RIGHT
+  if (c == 197) c = TERM_KEY_CTRL_P; // TERM_KEY_CTRL_U; // UP
+  if (c == 204) c = TERM_KEY_CTRL_P; // TERM_KEY_CTRL_F; // UP
+  if (c == 203) c = TERM_KEY_CTRL_N; // TERM_KEY_CTRL_G; // DOWN
 
   if ((c == TERM_KEY_ENTER) || (c == TERM_KEY_BACKSPACE)) {
     cputc(' '); // delete software cursor
@@ -221,11 +226,11 @@ uint8_t term_get_key(lined_t *l) {
   if (c ==  94) c = TERM_KEY_TAB;    // SHIFT-TILDE
   if (c ==  26) c = TERM_KEY_TAB;    // CTRL-Z
   if (c ==  19) c = TERM_KEY_CTRL_A; // HOME
+  if (c ==  95) c = TERM_KEY_CTRL_E; // END
   if (c == 145) c = TERM_KEY_CTRL_P; // UP
   if (c ==  17) c = TERM_KEY_CTRL_N; // DOWN
   if (c == 157) c = TERM_KEY_CTRL_B; // LEFT
   if (c ==  29) c = TERM_KEY_CTRL_F; // RIGHT
-  if (c ==  95) c = TERM_KEY_CTRL_E; // END
 #endif
 
 #ifdef C64

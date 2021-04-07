@@ -68,11 +68,23 @@ static const char input[] = {
   "reset\r"
 };
 
+#ifdef ZX
+
+#define KEYS                  \
+  " q=break y=left  s=del" LF \
+  " d=exit  i=right w=osd" LF \
+  " a=home  u=up"          LF \
+  " e=end   g=down"        LF
+
+#else
+
 #define KEYS                           \
   " c=break b=left  l=cls  k=ceol"  LF \
   " d=exit  f=right o=osd  u=cline" LF \
   " a=home  p=up    r=char w=cword" LF \
   " e=end   n=down  t=swap"         LF
+
+#endif
 
 static uint8_t parse(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
