@@ -13,7 +13,7 @@ library.
 
 **push** thus inherits *TAB completion*, *history* and *hints*
 (suggestions at the right of the prompt as you type) while
-providiing rich line editing feautures like cursor movment, inserting
+providiing rich line editing features like cursor movment, inserting
 text at the current cursor position, jumping to the first (HOME) or
 last (END) position of the input buffer, deleting the last word and
 more.
