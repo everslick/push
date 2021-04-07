@@ -80,7 +80,7 @@ void    term_make_beep(void);
 void    term_clear_screen(void);
 void    term_screen_size(uint8_t *cols, uint8_t *rows);
 
-void    term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos);
+void    term_refresh_line(lined_t *l, char *buf, uint8_t len);
 
 uint8_t term_get_key(lined_t *l);
 void    term_push_keys(const char *str);

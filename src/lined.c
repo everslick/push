@@ -160,7 +160,9 @@ static void refresh_line(lined_t *l) {
     }
   }
 
-  term_refresh_line(l, buf, len, pos);
+  l->xpos = pos;
+
+  term_refresh_line(l, buf, len);
 }
 
 /* =============================== History ================================ */
@@ -416,6 +418,8 @@ static void edit_delete_prev_word(lined_t *l) {
  *
  * The function returns the code of the last pressed key. */
 static uint8_t edit_line(lined_t *l, uint8_t key) {
+  l->key = key;
+
 #ifdef HAVE_COMPLETION
   /* Handle autocompletion. */
   complete_line(l, &key);
@@ -533,6 +537,7 @@ lined_t *lined_init(void) {
   l->rows   = 0;
   l->pos    = 0;
   l->len    = 0;
+  l->key    = 0;
   l->flags  = 0x0f;
 #ifdef HAVE_HISTORY
   l->index  = 0;
@@ -561,6 +566,7 @@ void lined_reset(lined_t *l, uint8_t flags) {
   l->buf[0] = 0;
   l->pos    = 0;
   l->len    = 0;
+  l->key    = 0;
   l->flags  = flags;
 
   // show the prompt, even when ECHO is off

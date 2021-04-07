@@ -4,6 +4,9 @@
 
 #include "term.h"
 
+#define OSD_W 7
+#define OSD_H 8
+
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
 #define PEEK(X)   (*(unsigned char *)(X))
 
@@ -25,14 +28,13 @@ static void clear(uint8_t length) {
 }
 
 #ifdef HAVE_OSD
-uint8_t key = 0;
-uint8_t osd = 0;
+static uint8_t osd = 0;
 
 static void hide_osd(lined_t *l) {
   uint8_t i, w = l->cols, x = wherex(), y = wherey();
 
-  for (i=1; i<6; i++) {
-    gotoxy(w-7, i); clear(7);
+  for (i=0; i<OSD_H; i++) {
+    gotoxy(w-OSD_W, i); clear(OSD_W);
   }
 
   gotoxy(x, y);
@@ -41,37 +43,58 @@ static void hide_osd(lined_t *l) {
 static void show_osd(lined_t *l) {
   uint8_t w = l->cols, h = l->rows, x = wherex(), y = wherey();
 
+#ifdef ZX
+  textbackground(COLOR_YELLOW);
+  textcolor(COLOR_BLACK);
+#else
   textcolor(COLOR_YELLOW);
+  revers(1);
+#endif
 
-  gotoxy(w-7, 1); cprintf("k = %3u", key);
-  gotoxy(w-7, 2); cprintf("x = %3u", l->plen + l->pos);
-  gotoxy(w-7, 3); cprintf("y = %3u", y);
-  gotoxy(w-7, 4); cprintf("w = %3u", w);
-  gotoxy(w-7, 5); cprintf("h = %3u", h);
+  gotoxy(w-OSD_W, 0); cprintf("       ");
+  gotoxy(w-OSD_W, 1); cprintf(" k:%3u ", l->key);
+  gotoxy(w-OSD_W, 2); cprintf(" p:%3u ", l->pos);
+  gotoxy(w-OSD_W, 3); cprintf(" x:%3u ", l->xpos + l->plen);
+  gotoxy(w-OSD_W, 4); cprintf(" y:%3u ", y);
+  gotoxy(w-OSD_W, 5); cprintf(" w:%3u ", w);
+  gotoxy(w-OSD_W, 6); cprintf(" h:%3u ", h);
+  gotoxy(w-OSD_W, 7); cprintf("       ");
+
+#ifdef ZX
+  textbackground(COLOR_BLACK);
+#else
+  revers(0);
+#endif
+
+  textcolor(COLOR_DEFAULT);
 
   gotoxy(x, y);
 }
 #endif // HAVE_OSD
 
-static void show_hint(lined_t *l) {
 #ifdef HAVE_HINTS
+static void show_hint(lined_t *l) {
   if ((l->flags & LINED_HINTS) && (l->plen + l->len < l->cols)) {
     const char *hint = term_hint_cb(l);
 
     if (hint) {
+      uint8_t max = l->cols - l->plen - l->len - 1; // one extra space
       uint8_t i, len = (uint8_t)strlen(hint);
-      uint8_t maxlen = l->cols - (l->plen + l->len);
+
+#ifdef HAVE_OSD
+      if (osd && (wherey() < OSD_H)) max -= OSD_W;
+#endif
 
       cputc(' ');
 
-      if (len > maxlen) len = maxlen;
+      if (len > max) len = max;
 
       textcolor(COLOR_BLUE);
       for (i=0; i<len; i++) cputc(hint[i]);
     }
   }
-#endif
 }
+#endif
 
 void term_init(void) {
 #ifdef LINUX
@@ -80,6 +103,12 @@ void term_init(void) {
 
 #ifdef M65
   togglecase();
+#endif
+
+#ifdef ZX
+#ifdef HAVE_OSD
+  osd = 1;
+#endif
 #endif
 
   bordercolor(COLOR_BLACK);
@@ -106,36 +135,64 @@ void term_screen_size(uint8_t *cols, uint8_t *rows) {
 
 /* Rewrite the currently edited line accordingly to the buffer content,
  * cursor position, and number of columns of the terminal. */
-void term_refresh_line(lined_t *l, char *buf, uint8_t len, uint8_t pos) {
-  uint8_t i, y = wherey();
+void term_refresh_line(lined_t *l, char *buf, uint8_t len) {
+  uint8_t i, x, y = wherey();
+
+#ifdef HAVE_OSD
+  uint8_t max = l->cols - l->plen;
+
+  if (osd && (y < OSD_H)) max -= OSD_W;
+  if (len > max) len = max;
+#endif
 
   /* Cursor to left edge */
   gotoxy(0, y);
 
   /* Write the prompt */
   textcolor(COLOR_RED);
-  cprintf(l->prompt);
+  for (i=0; i<l->plen; i++) cputc(l->prompt[i]);
 
   /* Write the current buffer content */
   textcolor(COLOR_WHITE);
   for (i=0; i<len; i++) cputc(buf[i]);
 
+#ifdef HAVE_HINTS
   /* Write the hint if any */
   show_hint(l);
+#endif
 
-  /* Erase to right */
-  clear((l->cols - wherex()) - 1);
+  /* Erase to right edge */
+  x = wherex();
+  if (x < l->cols) {
+    len = l->cols - x;
+#ifdef HAVE_OSD
+    if (osd && (y < OSD_H)) len -= OSD_W;
+#endif
+    clear(len);
+  }
 
 #ifdef HAVE_OSD
   /* Show the OSD if enabled. */
   if (osd) show_osd(l);
 #endif
 
+  /* Move cursor to original position */
+  gotoxy(l->plen + l->xpos, y);
+
+#ifdef ZX
+  /* Draw software cursor. */
+  if (l->key != TERM_KEY_ENTER) {
+    textbackground(COLOR_PURPLE);
+    cputc(' ');
+    gotoxy(l->plen + l->xpos, y);
+    (COLOR_BLACK);
+  }
+
+  textbackground(COLOR_BLACK);
+#endif
+
   /* Reset text color */
   textcolor(COLOR_DEFAULT);
-
-  /* Move cursor to original position */
-  gotoxy(l->plen + pos, y);
 }
 
 uint8_t term_get_key(lined_t *l) {
@@ -146,11 +203,16 @@ uint8_t term_get_key(lined_t *l) {
     keys = NULL;
   }
 
-#ifdef HAVE_OSD
-  key = c;
-#endif
-
   if ((c == 10) || (c == 13)) c = TERM_KEY_ENTER;
+
+#ifdef ZX
+  if (c ==  12) c = TERM_KEY_BACKSPACE;
+
+  if ((c == TERM_KEY_ENTER) || (c == TERM_KEY_BACKSPACE)) {
+    cputc(' '); // delete software cursor
+    gotoxy(l->plen + l->xpos, wherey());
+  }
+#endif
 
 #ifdef HAVE_PETSCII
   if (c ==  20) c = TERM_KEY_BACKSPACE;
@@ -191,7 +253,6 @@ uint8_t term_get_key(lined_t *l) {
 
   if (osd) {
     show_osd(l);
-    textcolor(COLOR_DEFAULT);
   }
 #endif
 

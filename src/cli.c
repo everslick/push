@@ -240,7 +240,7 @@ static void cmd_parse(uint8_t argc, char **argv) {
   uint8_t i;
 
   for (i=0; i<argc; i++) {
-    printf("argv[%i]='%s'" LF, (int)i, argv[i]);
+    printf("argv[%u]='%s'" LF, i, argv[i]);
   }
 }
 
@@ -459,10 +459,10 @@ static void cmd_dirname(uint8_t argc, char **argv) {
 
 static void cmd_mount(uint8_t argc, char **argv) {
 #ifdef C64
-  unsigned char dev = getfirstdevice();
+  uint8_t dev = getfirstdevice();
 
   while (dev != INVALID_DEVICE) {
-    printf ("/dev/fd%d on /mnt/%d" LF, dev - 8, dev);
+    printf ("/dev/fd%u on /mnt/%u" LF, dev - 8, dev);
     dev = getnextdevice(dev);
   }
 #else

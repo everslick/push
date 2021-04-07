@@ -16,6 +16,8 @@ void cputs(const char *s);
 char cgetc(void);
 
 uint8_t cursor(uint8_t onoff);
+uint8_t revers(uint8_t onoff);
+
 uint8_t textcolor(uint8_t color);
 uint8_t bgcolor(uint8_t color);
 uint8_t bordercolor(uint8_t color);

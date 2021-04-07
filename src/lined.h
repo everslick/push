@@ -59,12 +59,14 @@ typedef struct completion_t {
  * functionalities. */
 typedef struct lined_t {
   char    buf[LINED_LENGTH]; /* Edited line buffer. */
-  uint8_t plen;              /* Prompt length. */
-  uint8_t pos;               /* Current cursor position. */
+  uint8_t pos;               /* Current cursor position in buf. */
   uint8_t len;               /* Current edited line length. */
+  uint8_t xpos;              /* Current cursor position on screen. */
   uint8_t cols;              /* Number of columns in terminal. */
   uint8_t rows;              /* Number of rows in terminal. */
   uint8_t flags;             /* ECHO, HINTS, HISTORY, COMPLETE */
+  uint8_t plen;              /* Prompt length. */
+  uint8_t key;               /* Last pressed key. */
 #ifdef HAVE_COMPLETION
   completion_t *lc;          /* Current TAB completion vector. */
 #endif

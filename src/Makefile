@@ -43,7 +43,7 @@ CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include
 CFLAGS  += -L../../z88dk/lib
 CFLAGS  += -pragma-define:CLIB_EXIT_STACK_SIZE=0
 CFLAGS  += -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
-DEFINES += -DZ88DK -DAMALLOC -DHAVE_CONIO
+DEFINES += -DZ88DK -DAMALLOC -DHAVE_CONIO -DHAVE_OSD
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
 endif
 
@@ -61,7 +61,7 @@ CFLAGS  += -pragma-define:ansicolumns=$(COLS)
 CFLAGS  += -pragma-need=ansiterminal
 DEFINES += -DZX -DCOLUMNS=$(COLS)
 CFLAGS  += -lesxdos -O3
-#SOURCES += zxspec.c
+SOURCES += zxspec.c
 endif
 
 ifeq ($(MACHINE),zxn)

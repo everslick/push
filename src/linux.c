@@ -9,6 +9,7 @@
 #undef printf
 
 static uint8_t cursor_onoff = 0;
+static uint8_t revers_onoff = 0;
 
 static uint8_t color_fg = 0;
 static uint8_t color_bg = 0;
@@ -228,6 +229,16 @@ uint8_t cursor(uint8_t onoff) {
   return (old);
 }
 
+uint8_t revers(uint8_t onoff) {
+  uint8_t old = revers_onoff;
+
+  revers_onoff = onoff;
+
+  printf("\e[%um", (onoff) ? 7 : 27);
+
+  return (old);
+}
+
 uint8_t textcolor(uint8_t color) {
   uint8_t old = color_fg;
 
@@ -235,7 +246,6 @@ uint8_t textcolor(uint8_t color) {
 
   // make COLOR_WHITE bright
   printf("\e[%i;%im", (color == 7) ? 1 : 0, color + 30);
-  fflush(stdout);
 
   return (old);
 }
@@ -246,7 +256,6 @@ uint8_t bgcolor(uint8_t color) {
   color_bg = color;
 
   printf("\e[%im", color + 40);
-  fflush(stdout);
 
   return (old);
 }
@@ -296,4 +305,3 @@ uint8_t linux_init(void) {
 void linux_fini(void) {
 	tcsetattr(0, TCSANOW, &initial_settings);
 }
-
