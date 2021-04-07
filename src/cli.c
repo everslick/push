@@ -53,6 +53,8 @@ static const char input[] = {
   "ls\r"
   "rmdir bar\r"
   "ls\r"
+  "cd ..\r"
+  "rmdir foo\r"
   "version\r"
   "echo bye!\r"
   "sleep 5\r"
