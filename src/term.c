@@ -106,7 +106,12 @@ void term_init(void) {
   bgcolor(COLOR_BLACK);
   textcolor(COLOR_DEFAULT);
 
+#ifdef HAVE_SWCURSOR
+  cursor(0);
+#else
   cursor(1);
+#endif
+
   clrscr();
 }
 
@@ -173,10 +178,10 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len) {
   /* Move cursor to original position */
   gotoxy(x, y);
 
-#ifdef ZX
+#ifdef HAVE_SWCURSOR
   /* Draw software cursor. */
   if (l->key != TERM_KEY_ENTER) {
-    textbackground(COLOR_PURPLE);
+    textbackground(COLOR_CYAN);
     textcolor(COLOR_WHITE);
     cputc((l->pos < l->len) ? l->buf[l->pos] : ' ');
     gotoxy(x, y);
@@ -215,11 +220,6 @@ uint8_t term_get_key(lined_t *l) {
   if (c == 197) c = TERM_KEY_CTRL_P; // TERM_KEY_CTRL_U; // UP
   if (c == 204) c = TERM_KEY_CTRL_P; // TERM_KEY_CTRL_F; // UP
   if (c == 203) c = TERM_KEY_CTRL_N; // TERM_KEY_CTRL_G; // DOWN
-
-  if ((c == TERM_KEY_ENTER) || (c == TERM_KEY_BACKSPACE)) {
-    cputc(' '); // delete software cursor
-    gotoxy(l->plen + l->xpos, wherey());
-  }
 #endif
 
 #ifdef HAVE_PETSCII
@@ -261,6 +261,13 @@ uint8_t term_get_key(lined_t *l) {
 
   if (osd) {
     show_osd(l);
+  }
+#endif
+
+#ifdef HAVE_SWCURSOR
+  if ((c == TERM_KEY_ENTER) || (c == TERM_KEY_BACKSPACE)) {
+    cputc(' '); // delete software cursor
+    gotoxy(l->plen + l->xpos, wherey());
   }
 #endif
 
