@@ -1,5 +1,5 @@
-#ifndef _LINUX_H_
-#define _LINUX_H_
+#ifndef _POSIX_H_
+#define _POSIX_H_
 
 #define COLOR_BLACK           0
 #define COLOR_RED             1
@@ -19,9 +19,9 @@
 
 #define printf cprintf
 
-uint8_t linux_init(void);
-void    linux_fini(void);
+uint8_t posix_init(void);
+void    posix_fini(void);
 
 int cprintf(const char *format, ...);
 
-#endif // _LINUX_H_
+#endif // _POSIX_H_

@@ -12,12 +12,14 @@ TARGET   = $(PROGRAM)-$(MACHINE)
 # native
 ifndef SDK
 CC       = gcc
+SDK      = $(CC)
 BIN      = $(PROGRAM)
 TARGET   = $(PROGRAM)
+MACHINE  = posix
 CFLAGS   = -MMD -MP -O -g3 -Wno-format-security
-DEFINES += -DGCC -DLINUX -DHAVE_FILEIO
+DEFINES += -DGCC -DPOSIX -DHAVE_FILEIO
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION -DHAVE_OSD
-SOURCES += linux.c
+SOURCES += posix.c
 endif
 
 ifeq ($(SDK),cc65)

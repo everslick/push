@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#ifdef LINUX
- #include "linux.h"
+#ifdef POSIX
+ #include "posix.h"
 #endif
 
 #ifdef ZX

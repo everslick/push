@@ -97,8 +97,8 @@ static void show_hint(lined_t *l) {
 #endif
 
 void term_init(void) {
-#ifdef LINUX
-  linux_init();
+#ifdef POSIX
+  posix_init();
 #endif
 
 #ifdef M65
@@ -120,8 +120,8 @@ void term_init(void) {
 }
 
 void term_fini(void) {
-#ifdef LINUX
-  linux_fini();
+#ifdef POSIX
+  posix_fini();
 #endif
 }
 
@@ -262,7 +262,7 @@ uint8_t term_get_key(lined_t *l) {
 /* Beep, used for completion when there is nothing to complete or when all
  * the choices were already shown. */
 void term_make_beep(void) {
-#ifndef LINUX
+#ifndef POSIX
   bordercolor(COLOR_RED);
   waitvsync(); waitvsync();
   bordercolor(COLOR_BLACK);

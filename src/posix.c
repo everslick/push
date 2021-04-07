@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "linux.h"
+#include "posix.h"
 
 #undef printf
 
@@ -287,7 +287,7 @@ int cprintf(const char *format, ...) {
   return (ret);
 }
 
-uint8_t linux_init(void) {
+uint8_t posix_init(void) {
 	struct termios new_settings;
                                                                                 
 	if (tcgetattr(0, &initial_settings) < 0) return (0);
@@ -302,6 +302,6 @@ uint8_t linux_init(void) {
   return (1);
 }
 
-void linux_fini(void) {
+void posix_fini(void) {
 	tcsetattr(0, TCSANOW, &initial_settings);
 }

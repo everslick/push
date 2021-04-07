@@ -17,12 +17,16 @@
 #endif
 
 #ifdef __CBM__
+
 #include <device.h>
 #include <cbm.h>
+
 #else
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+
 #endif // __CBM__
 
 #endif // HAVE_FILEIO

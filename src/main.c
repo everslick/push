@@ -10,7 +10,7 @@
 
 char scratch[sizeof (scratch)];
 
-#ifdef LINUX
+#ifdef POSIX
 static uint8_t reset_once_after_startup = 1;
 #endif
 
@@ -27,7 +27,7 @@ loop:
   logout  = 0;
   restart = 0;
 
-#ifdef LINUX
+#ifdef POSIX
   // workaround for mangled xterm after startup
   if (reset_once_after_startup) {
     reset_once_after_startup = 0;
