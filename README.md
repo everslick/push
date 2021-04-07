@@ -57,10 +57,12 @@ testing:
 * **make c64** (build C64 prg)
 * **make m65** (build MEGA65 prg)
 * **make zx** (build zx spectrum tap)
+* **make zx64** (build zx spectrum tap with 64 columns)
 * **make zxn** (build spectrum next tap)
 * **make c64emu** (start prg in vice)
 * **make m65emu** (start prg in xemu)
 * **make zxemu** (start tap in zesarux)
+* **make zx64emu** (start 64 columns tap in zesarux)
 
 ### Screenshots
 
