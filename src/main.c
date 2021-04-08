@@ -40,20 +40,20 @@ loop:
   term_init();
 
   if (!(lined = lined_init())) {
-    printf("push: out of memory" LF); return (1);
+    printf("push: out of memory\n"); return (1);
   }
 
   textcolor(COLOR_CYAN);
   printf(
-    "       ____  __  _______ __  __"  LF
-    "      / __ \\/ / / / ___// / / /" LF
-    "     / /_/ / / / /\\__ \\/ /_/ /" LF
-    "    / ____/ /_/ /___/ / __  /"    LF
-    "   / /    \\____//____/_/ / /"    LF
-    "  /_/ petite un*x shell /_/"      LF
+    "       ____  __  _______ __  __\n"
+    "      / __ \\/ / / / ___// / / /\n"
+    "     / /_/ / / / /\\__ \\/ /_/ /\n"
+    "    / ____/ /_/ /___/ / __  /\n"
+    "   / /    \\____//____/_/ / /\n"
+    "  /_/ petite un*x shell /_/\n"
   );
   textcolor(COLOR_DEFAULT);
-  printf(LF);
+  printf("\n");
 
   lined_prompt(lined, "push:$ ");
   lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
@@ -67,7 +67,7 @@ loop:
       char *cmd = lined_line(lined);
       uint8_t ret;
 
-      printf(LF);
+      printf("\n");
 
       ret = cli_exec(cmd);
 
@@ -80,10 +80,10 @@ loop:
 
       lined_reset(lined, LINED_HISTORY | LINED_COMPLETE | LINED_HINTS | LINED_ECHO);
     } else if (key == TERM_KEY_CTRL_C) {
-      printf("break" LF);
+      printf("break\n");
       logout = 1;
     } else if (key == TERM_KEY_CTRL_D) {
-      printf("exit" LF);
+      printf("exit\n");
       logout = 1;
     }
   }

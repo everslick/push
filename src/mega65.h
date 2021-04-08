@@ -21,8 +21,6 @@
 
 #define COLOR_DEFAULT      15
 
-#define LF "\n"
-
 #include <stdint.h>
 
 uint8_t cgetc(void);

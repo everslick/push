@@ -70,19 +70,19 @@ static const char input[] = {
 
 #ifdef ZX
 
-#define KEYS                  \
-  " q=break y=left  s=del" LF \
-  " d=exit  i=right w=osd" LF \
-  " a=home  u=up"          LF \
-  " e=end   g=down"        LF
+#define KEYS                 \
+  " q=break y=left  s=del\n" \
+  " d=exit  i=right w=osd\n" \
+  " a=home  u=up\n"          \
+  " e=end   g=down\n"      
 
 #else
 
-#define KEYS                           \
-  " c=break b=left  l=cls  k=ceol"  LF \
-  " d=exit  f=right o=osd  u=cline" LF \
-  " a=home  p=up    r=char w=cword" LF \
-  " e=end   n=down  t=swap"         LF
+#define KEYS                          \
+  " c=break b=left  l=cls  k=ceol\n"  \
+  " d=exit  f=right o=osd  u=cline\n" \
+  " a=home  p=up    r=char w=cword\n" \
+  " e=end   n=down  t=swap\n"
 
 #endif
 
@@ -229,37 +229,37 @@ static char *realpath(const char *path, char *unused) {
 }
 
 static void not_implemented(const char *cmd) {
-  printf("%s: not implemented" LF, cmd);
+  printf("%s: not implemented\n", cmd);
 }
 
 static void missing_arg(const char *cmd) {
-  printf("%s: missing argument" LF, cmd);
+  printf("%s: missing argument\n", cmd);
 }
 
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
   uint8_t n = 1;
 
-  printf("available commands:" LF " ");
+  printf("available commands:\n" " ");
 
   while (*ptr) {
     printf("%-10s", ptr);
-    if ((n++ % 3) == 0) printf(LF " ");
+    if ((n++ % 3) == 0) printf("\n ");
     ptr += strlen(ptr) + 1;
   }
-  if ((n % 3) == 0) printf(LF);
+  if ((n % 3) == 0) printf("\n");
 
-  printf(LF);
-  printf("line editor keys ([ctrl]+[x]):" LF);
+  printf("\n");
+  printf("line editor keys ([ctrl]+[x]):\n");
   printf(KEYS);
-  printf(LF);
+  printf("\n");
 }
 
 static void cmd_parse(uint8_t argc, char **argv) {
   uint8_t i;
 
   for (i=0; i<argc; i++) {
-    printf("argv[%u]='%s'" LF, i, argv[i]);
+    printf("argv[%u]='%s'\n", i, argv[i]);
   }
 }
 
@@ -270,11 +270,11 @@ static void cmd_echo(uint8_t argc, char **argv) {
     printf("%s", argv[i]);
     if (i < argc - 1) printf(" ");
   }
-  printf(LF);
+  printf("\n");
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
-  printf("push, version " mkstr(VERSION) " (" mkstr(MACHINE) "-" mkstr(TOOLCHAIN) ")" LF);
+  printf("push, version " mkstr(VERSION) " (" mkstr(MACHINE) "-" mkstr(TOOLCHAIN) ")\n");
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {
@@ -313,7 +313,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
   flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
-    printf("usage: %s [-v] name" LF, *argv);
+    printf("usage: %s [-v] name\n", *argv);
     return;
   }
 
@@ -328,7 +328,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
     path = *argv;
 
     if (flags & 0x02) { // verbose
-      printf("rm: removing '%s'" LF, path);
+      printf("rm: removing '%s'\n", path);
     }
 
     if (remove(path)) {
@@ -348,7 +348,7 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
   flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
-    printf("usage: %s [-v] name" LF, *argv);
+    printf("usage: %s [-v] name\n", *argv);
     return;
   }
 
@@ -365,7 +365,7 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
     path = *argv;
 
     if (flags & 0x02) { // verbose
-      printf("mkdir: creating directory '%s'" LF, path);
+      printf("mkdir: creating directory '%s'\n", path);
     }
 
 #ifdef HAVE_SDIEC
@@ -391,7 +391,7 @@ static void cmd_rmdir(uint8_t argc, char **argv) {
   flags = getflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
-    printf("usage: %s [-v] name" LF, *argv);
+    printf("usage: %s [-v] name\n", *argv);
     return;
   }
 
@@ -406,7 +406,7 @@ static void cmd_rmdir(uint8_t argc, char **argv) {
     path = *argv;
 
     if (flags & 0x02) { // verbose
-      printf("rmdir: removing directory '%s'" LF, path);
+      printf("rmdir: removing directory '%s'\n", path);
     }
 
 #ifdef HAVE_SDIEC
@@ -435,7 +435,7 @@ static void cmd_pwd(uint8_t argc, char **argv) {
 #endif
 
   if (pwd) {
-    printf("%s" LF, pwd);
+    printf("%s\n", pwd);
   } else {
     perror(*argv);
   }
@@ -450,7 +450,7 @@ static void cmd_realpath(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s" LF, realpath(argv[1], NULL));
+  printf("%s\n", realpath(argv[1], NULL));
 }
 
 static void cmd_basename(uint8_t argc, char **argv) {
@@ -459,7 +459,7 @@ static void cmd_basename(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s" LF, basename(argv[1]));
+  printf("%s\n", basename(argv[1]));
 }
 
 static void cmd_dirname(uint8_t argc, char **argv) {
@@ -468,7 +468,7 @@ static void cmd_dirname(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s" LF, dirname(argv[1]));
+  printf("%s\n", dirname(argv[1]));
 }
 
 static void cmd_mount(uint8_t argc, char **argv) {
@@ -476,7 +476,7 @@ static void cmd_mount(uint8_t argc, char **argv) {
   uint8_t dev = getfirstdevice();
 
   while (dev != INVALID_DEVICE) {
-    printf ("/dev/fd%u on /mnt/%u" LF, dev - 8, dev);
+    printf ("/dev/fd%u on /mnt/%u\n", dev - 8, dev);
     dev = getnextdevice(dev);
   }
 #else
@@ -550,10 +550,10 @@ static void cmd_ls(uint8_t argc, char **argv) {
 
       textcolor(col);
       printf("%-19s", name);
-      if ((files++ % 2) == 0) printf(LF);
+      if ((files++ % 2) == 0) printf("\n");
     }
 
-    if ((files % 2) == 0) printf(LF);
+    if ((files % 2) == 0) printf("\n");
 
 #ifdef __CBM__
     cbm_closedir(1);
@@ -672,7 +672,7 @@ uint8_t cli_exec(char *cmd) {
     exec(*argv, NULL); // will not return if works
 #endif
 
-    printf("%s: command not found" LF, *argv);
+    printf("%s: command not found\n", *argv);
   }
 
   return (0);

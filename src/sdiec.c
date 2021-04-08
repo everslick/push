@@ -32,7 +32,7 @@ static int8_t snd_drv_cmd(const char *format, ...) {
 
   n = cbm_open(15, 8, 15, scratch);
 #ifdef VERBOSE
-  printf("sending: '%s'" LF, scratch);
+  printf("sending: '%s'\n", scratch);
 #endif
 
   if (n < 0) {
@@ -63,7 +63,7 @@ static int8_t snd_drv_cmd(const char *format, ...) {
   errstr[d] = '\0';
 
 #ifdef VERBOSE
-  printf("status: '%s' (%u)" LF, errstr, errnum);
+  printf("status: '%s' (%u)\n", errstr, errnum);
 #endif
 
 	cbm_close(15);
@@ -111,7 +111,7 @@ void sdiec_error(const char *cmd) {
   printf(cmd);
   printf(": ");
   printf(errstr);
-  printf(LF);
+  printf("\n");
 }
 
 #endif

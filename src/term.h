@@ -27,10 +27,6 @@
  #define COLOR_DEFAULT COLOR_GRAY3
 #endif
 
-#ifndef LF
- #define LF "\r\n"
-#endif
-
 #include "lined.h"
 
 // TERMINAL KEY CODES

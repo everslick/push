@@ -14,8 +14,6 @@
 
 #define COLOR_DEFAULT      4
 
-#define LF "\r"
-
 #define bgcolor  textbackground
 #define cursor(onoff)
 
