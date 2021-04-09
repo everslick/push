@@ -1,6 +1,6 @@
 PROGRAM  = push
 VERSION  = 0.0.2
-SOURCES  = main.c term.c lined.c cli.c
+SOURCES  = main.c term.c lined.c cli.c parse.c
 
 export PATH=../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
 export ZCCCFG=../../z88dk/lib/config/
@@ -41,8 +41,7 @@ endif
 
 ifeq ($(SDK),z88dk)
 BIN      = $(TARGET)
-CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include
-CFLAGS  += -L../../z88dk/lib
+CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include # --hardware-keyboard
 CFLAGS  += -pragma-define:CLIB_EXIT_STACK_SIZE=0
 CFLAGS  += -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
 DEFINES += -DZ88DK -DAMALLOC -DHAVE_CONIO -DHAVE_OSD -DHAVE_SWCURSOR

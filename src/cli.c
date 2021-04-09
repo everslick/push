@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "parse.h"
 #include "lined.h"
 #include "term.h"
 #include "cli.h"
@@ -85,148 +86,6 @@ static const char input[] = {
   " e=end   n=down  t=swap\n"
 
 #endif
-
-static uint8_t parse(char *cmd, char **argv, uint8_t args) {
-  uint8_t i, argc = 0, quote = 0, first = 1;
-  char *s = cmd, *t = s + strlen(s) - 1;
-
-  while ((t >= s) && (*t && (*t == ' '))) *t-- = '\0'; // trim end
-
-  for (i=0; i<args; i++) {
-    argv[i] = '\0';
-  }
-
-  while (*s) {
-    if (first) {
-      first = 0;
-
-      // skip whitespace
-      while (*s && (*s == ' ')) s++;
-
-      // skip quotation mark
-      if (*s && (*s == '"')) { s++; quote ^= 1; }
-
-      // start next arg
-      *argv++ = s;
-
-      if (++argc == args) {
-        return (argc);
-      }
-    }
-
-    if (*s == '"') {
-      *s++ = '\0'; // remove and skip
-      if (*s == '"') first = 1;
-      quote ^= 1;
-    } else if ((!quote) && (*s == ' ')) {
-      *s++ = '\0'; // remove and skip
-      first = 1;
-    } else {
-      s++;
-    }
-  }
-
-  return (argc);
-}
-
-static uint8_t getflags(uint8_t argc, char **argv, const char *optstr) {
-  uint8_t n, i, flags = 0;
-  int opt;
-
-  n = strlen(optstr);
-  if (n > 8) n = 8;
-
-  // reset global option index
-  optind = 1;
-
-  while ((opt = getopt(argc, argv, optstr)) != -1) {
-    for (i=0; i<n; i++) {
-      if (opt == optstr[i]) flags |= (1<<i);
-    }
-  }
-
-  return (flags);
-}
-
-static const char *dirname(const char *path) {
-  char *s, *slash = NULL, *ptr = scratch;
-
-  strcpy(ptr, path);
-
-  s = ptr + strlen(ptr) - 1;
-  if (*s == '/') slash = s;;
-
-  if (slash) {
-    while ((*slash == '/') && (slash != ptr)) {
-      *slash-- = '\0';
-    }
-  }
-
-  slash = strrchr(ptr, '/');
-
-  if (slash && (slash != ptr)) {
-    *slash = '\0';
-  } else {
-    if (*ptr != '/') *ptr = '.';
-    ptr[1] = '\0';
-  }
-
-  return (ptr);
-}
-
-static const char *basename(const char *path) {
-  const char *slash = strrchr(path, '/');
-
-  if (slash) return (slash + 1);
-
-  return (path);
-}
-
-static char *realpath(const char *path, char *unused) {
-  uint8_t l, i, rel, sz = 0, ti = 0;
-  char buf[64], *tokv[8], *ptr;
-
-  strcpy(buf, path);
-  rel = (*path == '/') ? 0 : 1;
-
-  ptr = strtok(buf, "/");
-  while (ptr != NULL) {
-    if (strcmp(ptr, "..") == 0) {
-      if (ti > 0) {
-        ti--;
-      }
-    } else if (strcmp(ptr, ".") != 0) {
-      tokv[ti++] = ptr;
-
-      if (ti >= 8) return (NULL);
-    }
-    ptr = strtok(NULL, "/");
-  }
-
-  ptr = scratch;
-  for (i=0; i<ti; i++) {
-    l = strlen(tokv[i]);
-
-    if (i > 0 || !rel) {
-      if (++sz >= sizeof (scratch)) return (NULL);
-      *ptr++ = '/';
-    }
-
-    sz += l;
-    if (sz >= sizeof (scratch)) return (NULL);
-
-    strcpy(ptr, tokv[i]);
-    ptr += l;
-  }
-
-  if (ptr == scratch) {
-    if (++sz >= sizeof (scratch)) return (NULL);
-    *ptr++ = rel ? '.' : '/';
-  }
-  *ptr = '\0';
-
-  return (scratch);
-}
 
 static void not_implemented(const char *cmd) {
   printf("%s: not implemented\n", cmd);
@@ -310,7 +169,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
   uint8_t flags;
   char *path;
 
-  flags = getflags(argc, argv, "?v");
+  flags = parse_optflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name\n", *argv);
@@ -345,7 +204,7 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
   uint8_t flags;
   char *path;
 
-  flags = getflags(argc, argv, "?v");
+  flags = parse_optflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name\n", *argv);
@@ -388,7 +247,7 @@ static void cmd_rmdir(uint8_t argc, char **argv) {
   uint8_t flags;
   char *path;
 
-  flags = getflags(argc, argv, "?v");
+  flags = parse_optflags(argc, argv, "?v");
 
   if (flags & 0x01) { // ?
     printf("usage: %s [-v] name\n", *argv);
@@ -450,7 +309,7 @@ static void cmd_realpath(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s\n", realpath(argv[1], NULL));
+  printf("%s\n", parse_realpath(argv[1], NULL));
 }
 
 static void cmd_basename(uint8_t argc, char **argv) {
@@ -459,7 +318,7 @@ static void cmd_basename(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s\n", basename(argv[1]));
+  printf("%s\n", parse_basename(argv[1]));
 }
 
 static void cmd_dirname(uint8_t argc, char **argv) {
@@ -468,7 +327,7 @@ static void cmd_dirname(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s\n", dirname(argv[1]));
+  printf("%s\n", parse_dirname(argv[1]));
 }
 
 static void cmd_mount(uint8_t argc, char **argv) {
@@ -623,7 +482,7 @@ uint8_t cli_exec(char *cmd) {
   char *argv[8];
   uint8_t argc;
 
-  argc = parse(cmd, argv, 8);
+  argc = parse_command(cmd, argv, 8);
 
   if (argc == 0) return (0);
 
