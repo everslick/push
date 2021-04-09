@@ -2,7 +2,7 @@
 
 #ifndef __CBM__
 #error "SDIEC is only available on CBM targets."
-#endif // __CBM__
+#endif
 
 #include <string.h>
 #include <stdint.h>
@@ -114,8 +114,8 @@ int8_t fileio_mkfs(const char *name) {
 int8_t fileio_ls(uint8_t flags, const char *path) {
   uint8_t col, listlong = 0, listall = 0, columns = 2;
   uint8_t files = 1, dev = getcurrentdevice();
-  char *name, *type;
   struct cbm_dirent entry;
+  char *name, *type;
   size_t size;
 
   if (cbm_opendir(1, dev)) {
@@ -137,12 +137,10 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
 
   while (!cbm_readdir(1, &entry)) {
     char *time = "2000/12/31 00:00";
-    name = entry.name;
     col = COLOR_DEFAULT;
-    size = 1234;
     type = 'F';
 
-    if ((name[0] == '.') && (!listall)) continue;
+    if ((entry.name[0] == '.') && (!listall)) continue;
 
     if (entry.type == CBM_T_DIR) {
       type = 'D';
@@ -151,12 +149,12 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
 
     if (listlong) {
       textcolor(COLOR_DEFAULT);
-      printf("%c %u %s ", type, size, time);
+      printf("%c %6u %s ", type, entry.size, time);
       textcolor(col);
-      printf("%s", name);
+      printf("%s", entry.name);
     } else {
       textcolor(col);
-      printf("%-19s", name);
+      printf("%-19s", entry.name);
     }
 
     if ((files++ % columns) == 0) printf("\n");

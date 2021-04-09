@@ -387,23 +387,26 @@ static void cmd_ls(uint8_t argc, char **argv) {
 
     while ((entry = readdir(dir))) {
       const char *time = "2000/12/31 00:00";
-      const char *name = entry->d_name;
       uint8_t col = COLOR_DEFAULT;
       const char *type = "FILE";
-      size_t size = 1234;
+      size_t size = 0;
+      struct stat st;
 
-      if ((name[0] == '.') && (!listall)) continue;
+      if ((entry->d_name[0] == '.') && (!listall)) continue;
 
       if (entry->d_type == DT_DIR) {
         type = "DIR ";
         col = COLOR_BLUE;
+      } else {
+        stat(entry->d_name, &st);
+        size = st.st_size;
       }
 
       if (listlong) {
-        textcolor(COLOR_DEFAULT); printf("%s %u %s ", type, size, time);
-        textcolor(col);           printf("%s", name);
+        textcolor(COLOR_DEFAULT); printf("%s %6u %s ", type, size, time);
+        textcolor(col);           printf("%s", entry->d_name);
       } else {
-        textcolor(col);           printf("%-19s", name);
+        textcolor(col);           printf("%-19s", entry->d_name);
       }
 
       if ((files++ % columns) == 0) printf("\n");
