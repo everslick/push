@@ -17,59 +17,70 @@ char *parse_optarg;        /* argument associated with option */
 #define  EMSG   ""
 
 int8_t parse_getopt(uint8_t nargc, char **nargv, const char *ostr) {
-  static char *place = EMSG;    /* option letter processing */
-  char *oli;                    /* option letter list index */
+  static char *place = EMSG;       /* option letter processing */
+  char *oli;                       /* option letter list index */
 
-  if (parse_optreset || !*place) {    /* update scanning pointer */
+  if (parse_optreset) {            /* reset scanning pointer */
     parse_optreset = 0;
+    parse_optind = 1;
+
+    place = EMSG;
+  }
+
+  if (!*place) {                   /* update scanning pointer */
     if (parse_optind >= nargc || *(place = nargv[parse_optind]) != '-') {
       place = EMSG;
+
       return (-1);
     }
 
-    if (place[1] && *++place == '-') {  /* found "--" */
+    if (place[1] && *++place == '-') { /* found "--" */
       ++parse_optind;
       place = EMSG;
+
       return (-1);
     }
-  }                             /* option letter okay? */
+  }                                /* option letter okay? */
 
-  if ((parse_optopt = *place++) == ':' ||
-      !(oli = strchr(ostr, parse_optopt))) {
-    /*
-     * if the user didn't specify '-' as an option,
-     * assume it means -1.
-     */
+  if ((parse_optopt = *place++) == ':' || !(oli = strchr(ostr, parse_optopt))) {
+    /* if the user didn't specify '-' as an option, assume it means -1. */
     if (parse_optopt == '-') return (-1);
+
     if (!*place) ++parse_optind;
+
     if (parse_opterr && *ostr != ':') {
       printf("illegal option -- %c\n",  parse_optopt);
     }
 
     return (BADCH);
   }
-  if (*++oli != ':') {          /* don't need argument */
+
+  if (*++oli != ':') {             /* don't need argument */
     parse_optarg = NULL;
+
     if (!*place) ++parse_optind;
-  } else {                      /* need an argument */
-    if (*place) {               /* no white space */
+  } else {                         /* need an argument */
+    if (*place) {                  /* no white space */
       parse_optarg = place;
     } else if (nargc <= ++parse_optind) {  /* no arg */
       place = EMSG;
+
       if (*ostr == ':') return (BADARG);
+
       if (parse_opterr) {
         printf("option requires an argument -- %c\n", parse_optopt);
       }
 
       return (BADCH);
-    } else {                    /* white space */
+    } else {                       /* white space */
       parse_optarg = nargv[parse_optind];
     }
+
     place = EMSG;
     ++parse_optind;
   }
 
-  return (parse_optopt);              /* dump back option letter */
+  return (parse_optopt);           /* dump back option letter */
 }
 
 uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
@@ -168,7 +179,7 @@ const char *parse_basename(const char *path) {
   return (path);
 }
 
-char *parse_realpath(const char *path, char *unused) {
+char *parse_realpath(const char *path) {
   uint8_t i, len, rel, ind = 0, sz = 0;
   char buf[64], *tokv[8], *ptr = NULL;
 
@@ -178,9 +189,7 @@ char *parse_realpath(const char *path, char *unused) {
   ptr = strtok(buf, "/");
   while (ptr != NULL) {
     if (strcmp(ptr, "..") == 0) {
-      if (ind > 0) {
-        ind--;
-      }
+      if (ind > 0) ind--;
     } else if (strcmp(ptr, ".") != 0) {
       tokv[ind++] = ptr;
 
@@ -195,6 +204,7 @@ char *parse_realpath(const char *path, char *unused) {
 
     if (i > 0 || !rel) {
       if (++sz >= sizeof (scratch)) return (NULL);
+
       *ptr++ = '/';
     }
 
@@ -207,6 +217,7 @@ char *parse_realpath(const char *path, char *unused) {
 
   if (ptr == scratch) {
     if (++sz >= sizeof (scratch)) return (NULL);
+
     *ptr++ = rel ? '.' : '/';
   }
   *ptr = '\0';

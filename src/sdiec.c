@@ -1,23 +1,27 @@
-#ifdef __CBM__
+#ifdef HAVE_SDIEC
+
+#ifndef __CBM__
+#error "SDIEC is only available on CBM targets."
+#endif // __CBM__
 
 #include <string.h>
-#include <stdarg.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 
+#include <device.h>
 #include <cbm.h>
 
-#include "sdiec.h"
 #include "term.h"
 #include "push.h"
+
+#include "fileio.h"
 
 static char cwd[64];
 
 static char errstr[17];
 static int8_t errnum;
-
-#include <stdlib.h>
-#include <string.h>
 
 //#define VERBOSE
 
@@ -71,7 +75,7 @@ static int8_t snd_drv_cmd(const char *format, ...) {
   return (errnum);
 }
 
-int8_t sdiec_version(char *buf, uint8_t size) {
+int8_t fileio_version(char *buf, uint8_t size) {
   int8_t err = snd_drv_cmd("x?");
 
   if (!err) {
@@ -81,13 +85,13 @@ int8_t sdiec_version(char *buf, uint8_t size) {
   return (err);
 }
 
-char *sdiec_getcwd(char *buf, uint8_t size) {
+char *fileio_getcwd(char *buf, uint8_t size) {
   strncpy(buf, cwd, size);
 
   return (buf);
 }
 
-int8_t sdiec_chdir(const char *dir) {
+int8_t fileio_chdir(const char *dir) {
   if (!strcmp(dir, "..")) {
     return (snd_drv_cmd("cd:\x5f"));
   }
@@ -95,23 +99,90 @@ int8_t sdiec_chdir(const char *dir) {
   return (snd_drv_cmd("cd:%s", dir));
 }
 
-int8_t sdiec_mkdir(const char *dir) {
+int8_t fileio_mkdir(const char *dir) {
   return (snd_drv_cmd("md:%s", dir));
 }
 
-int8_t sdiec_rmdir(const char *dir) {
+int8_t fileio_rmdir(const char *dir) {
   return (snd_drv_cmd("rd:%s", dir));
 }
 
-int8_t sdiec_mkfs(const char *name) {
+int8_t fileio_mkfs(const char *name) {
   return (snd_drv_cmd("n:%s,01", name));
 }
 
-void sdiec_error(const char *cmd) {
+int8_t fileio_ls(uint8_t flags, const char *path) {
+  uint8_t col, listlong = 0, listall = 0, columns = 2;
+  uint8_t files = 1, dev = getcurrentdevice();
+  char *name, *type;
+  struct cbm_dirent entry;
+  size_t size;
+
+  if (cbm_opendir(1, dev)) {
+    perror("ls");
+    return (-1);
+  }
+
+  if (cbm_readdir(1, &entry)) { // skip parent dir
+    cbm_closedir(1);
+    return (-1);
+  }
+
+  //  1  2  4  8
+  // -? -a -l -1
+
+  if (flags & 0x02) { listall = 1;               }
+  if (flags & 0x04) { columns = 1; listlong = 1; }
+  if (flags & 0x08) { columns = 1;               }
+
+  while (!cbm_readdir(1, &entry)) {
+    char *time = "2000/12/31 00:00";
+    name = entry.name;
+    col = COLOR_DEFAULT;
+    size = 1234;
+    type = 'F';
+
+    if ((name[0] == '.') && (!listall)) continue;
+
+    if (entry.type == CBM_T_DIR) {
+      type = 'D';
+      col = COLOR_BLUE;
+    }
+
+    if (listlong) {
+      textcolor(COLOR_DEFAULT);
+      printf("%c %u %s ", type, size, time);
+      textcolor(col);
+      printf("%s", name);
+    } else {
+      textcolor(col);
+      printf("%-19s", name);
+    }
+
+    if ((files++ % columns) == 0) printf("\n");
+  }
+
+  if ((columns > 1) && (files % columns) == 0) printf("\n");
+
+  cbm_closedir(1);
+
+  return (0);
+}
+
+void fileio_mount(const char *dev, const char *dir) {
+  uint8_t device = getfirstdevice();
+
+  while (device != INVALID_DEVICE) {
+    printf ("/dev/fd%u on /mnt/%u\n", device - 8, device);
+    device = getnextdevice(device);
+  }
+}
+
+void fileio_error(const char *cmd) {
   printf(cmd);
   printf(": ");
   printf(errstr);
   printf("\n");
 }
 
-#endif
+#endif // HAVE_SDIEC

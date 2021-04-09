@@ -126,7 +126,11 @@ void term_clear_screen(void) {
 }
 
 void term_screen_size(uint8_t *cols, uint8_t *rows) {
+#ifdef ZX
+  screensize((uint *)cols, (uint *)rows);
+#else
   screensize(cols, rows);
+#endif
 }
 
 /* Rewrite the currently edited line accordingly to the buffer content,

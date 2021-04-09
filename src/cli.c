@@ -13,22 +13,13 @@
 
 #ifdef HAVE_FILEIO
 
-#ifdef HAVE_SDIEC
-#include "sdiec.h"
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+#include "fileio.h"
 #endif
-
-#ifdef __CBM__
-
-#include <device.h>
-#include <cbm.h>
-
-#else
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
-#endif // __CBM__
 
 #endif // HAVE_FILEIO
 
@@ -40,7 +31,8 @@ static const char commands[] = {
   "reset\0"    "version\0"  "pwd\0"      "mount\0" 
   "cd\0"       "ls\0"       "mv\0"       "rm\0" 
   "realpath\0" "basename\0" "dirname\0"  "mkdir\0"
-  "parse\0"    "test\0"     "logout\0"   "exit\0"
+  "rmdir\0"    "parse\0"    "test\0"     "logout\0"
+  "exit\0"
   "\0" // end marker
 };
 
@@ -133,7 +125,11 @@ static void cmd_echo(uint8_t argc, char **argv) {
 }
 
 static void cmd_version(uint8_t argc, char **argv) {
-  printf("push, version " mkstr(VERSION) " (" mkstr(MACHINE) "-" mkstr(TOOLCHAIN) ")\n");
+  printf("push, version "
+    mkstr(VERSION)   " ("
+    mkstr(MACHINE)   "-"
+    mkstr(TOOLCHAIN) ")\n"
+  );
 }
 
 static void cmd_clear(uint8_t argc, char **argv) {
@@ -227,9 +223,9 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
       printf("mkdir: creating directory '%s'\n", path);
     }
 
-#ifdef HAVE_SDIEC
-    if (sdiec_mkdir(path)) {
-      sdiec_error("mkdir");
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+    if (fileio_mkdir(path)) {
+      fileio_error("mkdir");
     }
 #else
     if (mkdir(path, mode)) {
@@ -268,9 +264,9 @@ static void cmd_rmdir(uint8_t argc, char **argv) {
       printf("rmdir: removing directory '%s'\n", path);
     }
 
-#ifdef HAVE_SDIEC
-    if (sdiec_rmdir(path)) {
-      sdiec_error("rmdir");
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+    if (fileio_rmdir(path)) {
+      fileio_error("rmdir");
     }
 #else
     if (rmdir(path) < 0) {
@@ -287,8 +283,8 @@ static void cmd_pwd(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   char *pwd;
 
-#ifdef HAVE_SDIEC
-  pwd = sdiec_getcwd(scratch, sizeof (scratch));
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+  pwd = fileio_getcwd(scratch, sizeof (scratch));
 #else
   pwd = getcwd(scratch, sizeof (scratch));
 #endif
@@ -309,7 +305,7 @@ static void cmd_realpath(uint8_t argc, char **argv) {
     return;
   }
 
-  printf("%s\n", parse_realpath(argv[1], NULL));
+  printf("%s\n", parse_realpath(argv[1]));
 }
 
 static void cmd_basename(uint8_t argc, char **argv) {
@@ -330,19 +326,6 @@ static void cmd_dirname(uint8_t argc, char **argv) {
   printf("%s\n", parse_dirname(argv[1]));
 }
 
-static void cmd_mount(uint8_t argc, char **argv) {
-#ifdef C64
-  uint8_t dev = getfirstdevice();
-
-  while (dev != INVALID_DEVICE) {
-    printf ("/dev/fd%u on /mnt/%u\n", dev - 8, dev);
-    dev = getnextdevice(dev);
-  }
-#else
-  not_implemented(*argv);
-#endif
-}
-
 static void cmd_cd(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   if (argc < 2) {
@@ -350,15 +333,15 @@ static void cmd_cd(uint8_t argc, char **argv) {
     return;
   }
 
-#ifdef HAVE_SDIEC
-  if (sdiec_chdir(argv[1])) {
-    sdiec_error(*argv);
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+  if (fileio_chdir(argv[1])) {
+    fileio_error(*argv);
   }
-#else // __CBM__
+#else
   if (chdir(argv[1])) {
     perror(*argv);
   }
-#endif // __CBM__
+#endif
 
 #else // HAVE_FILEIO
   not_implemented(*argv);
@@ -367,59 +350,84 @@ static void cmd_cd(uint8_t argc, char **argv) {
 
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t files = 1;
-#ifdef __CBM__
-  uint8_t dev = getcurrentdevice();
-  struct cbm_dirent entry;
-#else
-  DIR *dir = opendir(".");
-  struct dirent *entry;
-#endif
+  uint8_t header, flags, listlong = 0, listall = 0, columns = 4;
 
-#ifdef __CBM__
-  if (cbm_opendir(1, dev)) {
+  flags = parse_optflags(argc, argv, "?al1");
+
+  if (flags & 0x01) { // ?
+    printf("usage: %s [-a] [-l] [-1] [path]\n", *argv);
+    return;
+  }
+
+  if (flags & 0x02) { listall = 1;               }
+  if (flags & 0x04) { columns = 1; listlong = 1; }
+  if (flags & 0x08) { columns = 1;               }
+
+  argv += optind;
+
+  header = (argv[0] && argv[1]);
+
+  do {
+    char *path = *argv;
+
+    if (!path) path = ".";
+    if (header) printf("%s:\n", path);
+
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+    fileio_ls(flags, path);
 #else
-  if (!dir) {
-#endif
-    perror("ls");
-  } else {
-#ifdef __CBM__
-    if (cbm_readdir(1, &entry)) { // skip parent dir
-      cbm_closedir(1);
+    DIR *dir = opendir(path);
+    struct dirent *entry;
+    uint8_t files = 1;
+
+    if (!dir) {
+      perror("ls");
       return;
     }
 
-    while (!cbm_readdir(1, &entry)) {
-      const char *name = entry.name;
-#else
     while ((entry = readdir(dir))) {
+      const char *time = "2000/12/31 00:00";
       const char *name = entry->d_name;
-#endif
       uint8_t col = COLOR_DEFAULT;
+      const char *type = "FILE";
+      size_t size = 1234;
 
-      if (!strcmp(name, ".") || !strcmp(name, "..")) {
-        continue;
+      if ((name[0] == '.') && (!listall)) continue;
+
+      if (entry->d_type == DT_DIR) {
+        type = "DIR ";
+        col = COLOR_BLUE;
       }
 
-#ifdef __CBM__
-      if (entry.type == CBM_T_DIR) col = COLOR_BLUE;
-#else
-      if (entry->d_type == DT_DIR) col = COLOR_BLUE;
-#endif
+      if (listlong) {
+        textcolor(COLOR_DEFAULT); printf("%s %u %s ", type, size, time);
+        textcolor(col);           printf("%s", name);
+      } else {
+        textcolor(col);           printf("%-19s", name);
+      }
 
-      textcolor(col);
-      printf("%-19s", name);
-      if ((files++ % 2) == 0) printf("\n");
+      if ((files++ % columns) == 0) printf("\n");
     }
 
-    if ((files % 2) == 0) printf("\n");
+    if ((columns > 1) && (files % columns) == 0) printf("\n");
 
-#ifdef __CBM__
-    cbm_closedir(1);
-#else
     closedir(dir);
 #endif
-  }
+    if (header && argv[1]) printf("\n");
+  } while (*++argv);
+
+#else // HAVE_FILEIO
+  not_implemented(*argv);
+#endif // HAVE_FILEIO
+}
+
+static void cmd_mount(uint8_t argc, char **argv) {
+#ifdef HAVE_FILEIO
+
+#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
+  fileio_mount(NULL, NULL);
+#endif
+
 #else
   not_implemented(*argv);
 #endif
@@ -527,8 +535,8 @@ uint8_t cli_exec(char *cmd) {
   } else if (!strcmp(*argv, "test")) {
     term_push_keys(input);
   } else {
-#ifdef C64
-    exec(*argv, NULL); // will not return if works
+#ifdef __CBM__
+    exec(*argv, NULL); // will not return
 #endif
 
     printf("%s: command not found\n", *argv);

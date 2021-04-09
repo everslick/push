@@ -7,7 +7,7 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args);
 
 const char *parse_dirname(const char *path);
 const char *parse_basename(const char *path);
-      char *parse_realpath(const char *path, char *unused);
+      char *parse_realpath(const char *path);
 
 uint8_t parse_optflags(uint8_t argc, char **argv, const char *optstr);
 int8_t  parse_getopt(uint8_t nargc, char **nargv, const char *ostr);

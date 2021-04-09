@@ -62,9 +62,9 @@ CFLAGS  += -pragma-define:ansicolumns=$(COLS)
 CFLAGS  += -pragma-need=ansiterminal
 CFLAGS  += -pragma-export:__zx_console_attr=0x5C8d
 CFLAGS  += -pragma-export:__zx_mode0_console_w=0
-DEFINES += -DZX -DCOLUMNS=$(COLS)
+DEFINES += -DZX -DCOLUMNS=$(COLS) -DHAVE_FILEIO -DHAVE_DIVMMC
 CFLAGS  += -lesxdos -O3
-SOURCES += zxspec.c
+SOURCES += zxspec.c divmmc.c
 endif
 
 ifeq ($(MACHINE),zxn)

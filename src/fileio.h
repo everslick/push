@@ -1,17 +1,20 @@
-#ifndef _SDIEC_H_
-#define _SDIEC_H_
+#ifndef _FILEIO_H_
+#define _FILEIO_H_
 
 #include <stdint.h>
 
-char *sdiec_getcwd(char buf[], uint8_t size);
+char *fileio_getcwd(char buf[], uint8_t size);
 
-int8_t sdiec_version(char buf[], uint8_t size);
+int8_t fileio_version(char buf[], uint8_t size);
 
-int8_t sdiec_chdir(const char *dir);
-int8_t sdiec_mkdir(const char *dir);
-int8_t sdiec_rmdir(const char *dir);
+int8_t fileio_chdir(const char *dir);
+int8_t fileio_mkdir(const char *dir);
+int8_t fileio_rmdir(const char *dir);
 
-void sdiec_error(const char *cmd);
+int8_t fileio_ls(uint8_t flags, const char *path);
+void fileio_mount(const char *dev, const char *dir);
+
+void fileio_error(const char *cmd);
 
 /* List of I/O error codes:
 **
@@ -34,4 +37,4 @@ void sdiec_error(const char *cmd);
 **      -2  =   [read status failed]
 */
 
-#endif // _SDIEC_H_
+#endif // _FILEIO_H_
