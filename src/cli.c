@@ -539,6 +539,13 @@ uint8_t cli_exec(char *cmd) {
     term_push_keys(input);
   } else {
 #ifdef __CBM__
+    if (argv[0][0] == '$') {
+      argc = parse_command("ls -la $", argv, 8);
+      cmd_ls(argc, argv);
+
+      return (0);
+    }
+
     exec(*argv, NULL); // will not return
 #endif
 
