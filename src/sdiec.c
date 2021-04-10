@@ -118,13 +118,12 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
   char *name, *type;
   size_t size;
 
-  if (cbm_opendir(1, dev)) {
-    perror("ls");
-    return (-1);
+  if (path[0] == '.' && !path[1]) {
+    path = "$";
   }
 
-  if (cbm_readdir(1, &entry)) { // skip parent dir
-    cbm_closedir(1);
+  if (cbm_opendir(1, dev, path)) {
+    perror("ls");
     return (-1);
   }
 
@@ -145,9 +144,15 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
     if (entry.type == CBM_T_DIR) {
       type = 'D';
       col = COLOR_BLUE;
+    } else if (entry.type == CBM_T_HEADER) {
+      if (!listall) continue;
+
+      type = 'H';
+      col = COLOR_CYAN;
+      revers(1);
     }
 
-    if (listlong) {
+    if (listlong && (type != 'H')) {
       textcolor(COLOR_DEFAULT);
       printf("%c %6u %s ", type, entry.size, time);
       textcolor(col);
@@ -157,10 +162,19 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
       printf("%-19s", entry.name);
     }
 
-    if ((files++ % columns) == 0) printf("\n");
+    if (type == 'H') {
+      revers(0);
+      printf("\n");
+    } else {
+      if ((files++ % columns) == 0) {
+        printf("\n");
+      }
+    }
   }
 
-  if ((columns > 1) && (files % columns) == 0) printf("\n");
+  if ((columns > 1) && (files % columns) == 0) {
+    printf("\n");
+  }
 
   cbm_closedir(1);
 
