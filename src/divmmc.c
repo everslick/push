@@ -43,9 +43,9 @@ char *fileio_getcwd(char *buf, uint8_t size) {
   } else {
     char cwd[ESXDOS_PATH_MAX];
 
-    esxdos_f_getcwd(pwd);
+    esxdos_f_getcwd(cwd);
 
-    strncpy(buf, pwd, size);
+    strncpy(buf, cwd, size);
   }
 
   return (buf);
