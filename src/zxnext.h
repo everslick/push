@@ -17,6 +17,8 @@
 #define bgcolor  textbackground
 #define cursor(onoff)
 
+void waitvsync(void);
+
 uint8_t revers(uint8_t onoff);
 
 #endif // _ZXNEXT_H_

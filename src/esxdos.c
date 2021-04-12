@@ -1,7 +1,7 @@
-#ifdef HAVE_DIVMMC
+#ifdef HAVE_ESXDOSC
 
-#ifndef Z88DK
-#error "DIVMMC is only available on Z80 targets."
+#ifndef ZXN
+#error "ESXDOS is only available on ZXNext."
 #endif
 
 #include <string.h>
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <arch/zx/esxdos.h>
+#include <arch/zxn/esx.h>
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -26,11 +26,11 @@ int rename(const char *old, const char *new) {
 }
 
 int8_t fileio_version(char *buf, uint8_t size) {
-  uint8_t drv = esxdos_m_getdrv();
-  struct esxdos_device ed;
+  uint8_t drv = esx_m_getdrv();
+  struct esx_device ed;
   int8_t err = 0;
 
-  err = esxdos_disk_info(drv, &ed);
+  err = esx_disk_info(drv, &ed);
 
   if (!err) {
     snprintf(buf, size, "%u.%u", ed.path>>3, ed.path & 0x03);
@@ -47,11 +47,11 @@ char *fileio_getcwd(char *buf, uint8_t size) {
   }
 
   if (size >= ESXDOS_PATH_MAX) {
-    esxdos_f_getcwd(buf);
+    esx_f_getcwd(buf);
   } else {
     char cwd[ESXDOS_PATH_MAX + 1];
 
-    if (esxdos_f_getcwd(cwd) != 0xff) {
+    if (esx_f_getcwd(cwd) != 0xff) {
       strncpy(buf, cwd, size);
     }
   }
@@ -60,16 +60,15 @@ char *fileio_getcwd(char *buf, uint8_t size) {
 }
 
 int8_t fileio_chdir(const char *dir) {
-  return (esxdos_f_chdir(dir));
+  return (esx_f_chdir(dir));
 }
 
 int8_t fileio_mkdir(const char *dir) {
-  //return (esxdos_f_mkdir((char *)dir));
-  return (-1);
+  return (esx_f_mkdir((char *)dir));
 }
 
 int8_t fileio_rmdir(const char *dir) {
-  return (esxdos_f_unlink(dir));
+  return (esx_f_unlink(dir));
 }
 
 int8_t fileio_mkfs(const char *name) {
@@ -79,12 +78,12 @@ int8_t fileio_mkfs(const char *name) {
 int8_t fileio_ls(uint8_t flags, char *path) {
   uint8_t col, listlong = 0, listall = 0, columns = 2;
   char *time = "2000/12/31 00:00";
-  struct esxdos_dirent entry;
+  struct esx_dirent entry;
   char *name, type;
   uint8_t files = 1;
   size_t size;
 
-  uint8_t dir = esxdos_f_opendir(path);
+  uint8_t dir = esx_f_opendir(path);
 
   //  1  2  4  8
   // -? -a -l -1
@@ -94,12 +93,12 @@ int8_t fileio_ls(uint8_t flags, char *path) {
   if (flags & 0x08) { columns = 1;               }
 
   if (dir == 0xff) {
-    uint8_t f = esxdos_f_open(name, 'r');
+    uint8_t f = esx_f_open(name, 'r');
 
     if (f != 0xff) {
-      struct esxdos_stat st;
+      struct esx_stat st;
 
-      if (esxdos_f_fstat(f, &st) < 0) {
+      if (esx_f_fstat(f, &st) < 0) {
         perror("ls");
       } else {
         if (listlong) {
@@ -109,17 +108,17 @@ int8_t fileio_ls(uint8_t flags, char *path) {
         }
       }
 
-      esxdos_f_close(f);
+      esx_f_close(f);
     }
   } else { 
-    while (!esxdos_f_readdir(dir, &entry)) {
-      struct esxdos_dirent_slice *info; // info -> attr, date, size
+    while (!esx_f_readdir(dir, &entry)) {
+      struct esx_dirent_slice *info; // info -> attr, date, size
       col = COLOR_DEFAULT;
       type = 'F';
 
       if ((entry.dir[0] == '.') && (!listall)) continue;
 
-      info = (struct esxdos_dirent_slice *)&entry.dir[ESXDOS_NAME_MAX+1];
+      info = (struct esx_dirent_slice *)&entry.dir[ESXDOS_NAME_MAX+1];
 
       if (info->attr & ESXDOS_ATTR_DIR) {
         type = 'D';
@@ -138,7 +137,7 @@ int8_t fileio_ls(uint8_t flags, char *path) {
       if ((files++ % columns) == 0) printf("\n");
     }
 
-    esxdos_f_close(dir);
+    esx_f_close(dir);
   }
 
   if ((columns > 1) && (files % columns) == 0) printf("\n");
@@ -156,4 +155,4 @@ void fileio_error(const char *cmd) {
   printf("\n");
 }
 
-#endif // HAVE_DIVMMC
+#endif // HAVE_ESXDOS

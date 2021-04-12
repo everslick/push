@@ -70,7 +70,7 @@ endif
 ifeq ($(MACHINE),zxn)
 DEFINES += -DZXN
 CFLAGS  += -lesxdos -O3 -clib=classic
-SOURCES += zxnext.c
+SOURCES += zxnext.c esxdos.c
 endif
 
 ifdef TEST
