@@ -24,10 +24,10 @@ more.
 GNU/Linux (gcc) for easy testing and development, and can be cross
 compiled for:
 
-* [C64](wikipedia.org/wiki/Commodore_64) with [cc65](cc65.org)
-* [ZX Spectrum](wikipedia.org/wiki/ZX_Spectrum) with [z88dk](z88dk.org)
-* [Spectrum Next](www.specnext.com/about/) with [z88dk](z88dk.org)
-* ~[MEGA65](mega65.org) with [kickc](gitlab.com/camelot/kickc)~
+* [C64](https://wikipedia.org/wiki/Commodore_64) with [cc65](https://cc65.org)
+* [ZX Spectrum](https://wikipedia.org/wiki/ZX_Spectrum) with [z88dk](https://z88dk.org)
+* [Spectrum Next](https://www.specnext.com/about/) with [z88dk](https://z88dk.org)
+* ~[MEGA65](https://mega65.org) with [kickc](https://gitlab.com/camelot/kickc)~
 
 While it builds successfully for all those target platforms, it is only
 really working well on Linux and C64 (and most recently on ZX-Zpectrum).
