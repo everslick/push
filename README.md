@@ -30,7 +30,7 @@ compiled for:
 * ~[MEGA65](https://mega65.org) with [kickc](https://gitlab.com/camelot/kickc)~
 
 While it builds successfully for all those target platforms, it is only
-really working well on Linux and C64 (and most recently on ZX-Zpectrum).
+really working well on Linux and C64 (and most recently on ZX-Spectrum).
 The main reason is lacking/broken support for some features from the C
 runtime libraries on some platforms, most important CONIO and heap
 management. Hopefully over time the toolchains will provide those APIs.
