@@ -21,6 +21,14 @@
 static char errstr[17];
 static int8_t errnum;
 
+int rename(const char *old, const char *new) {
+  return (-1);
+}
+
+int mkdir(char *path, int mode) {
+  return (-1);
+}
+
 int8_t fileio_version(char *buf, uint8_t size) {
   uint8_t drv = esxdos_m_getdrv();
   struct esxdos_device ed;
@@ -38,14 +46,18 @@ int8_t fileio_version(char *buf, uint8_t size) {
 }
 
 char *fileio_getcwd(char *buf, uint8_t size) {
+  if (buf && size) {
+    buf[0] = '\0';
+  }
+
   if (size >= ESXDOS_PATH_MAX) {
     esxdos_f_getcwd(buf);
   } else {
-    char cwd[ESXDOS_PATH_MAX];
+    char cwd[ESXDOS_PATH_MAX + 1];
 
-    esxdos_f_getcwd(cwd);
-
-    strncpy(buf, cwd, size);
+    if (esxdos_f_getcwd(cwd) != 0xff) {
+      strncpy(buf, cwd, size);
+    }
   }
 
   return (buf);
@@ -69,21 +81,13 @@ int8_t fileio_mkfs(const char *name) {
 
 int8_t fileio_ls(uint8_t flags, char *path) {
   uint8_t col, listlong = 0, listall = 0, columns = 2;
+  char *time = "2000/12/31 00:00";
   struct esxdos_dirent entry;
-  DIR *dir = opendir(path);
   char *name, type;
   uint8_t files = 1;
   size_t size;
 
-  if (!dir) {
-    perror("ls");
-    return (-1);
-  }
-
-  if (esxdos_f_readdir(1, &entry)) { // skip parent dir
-    closedir(dir);
-    return;
-  }
+  uint8_t dir = esxdos_f_opendir(path);
 
   //  1  2  4  8
   // -? -a -l -1
@@ -92,35 +96,55 @@ int8_t fileio_ls(uint8_t flags, char *path) {
   if (flags & 0x04) { columns = 1; listlong = 1; }
   if (flags & 0x08) { columns = 1;               }
 
-  while (!esxdos_f_readdir(dir, &entry)) {
-    struct esxdos_dirent_slice *info; // info -> attr, date, size
-    char *time = "2000/12/31 00:00";
-    col = COLOR_DEFAULT;
-    size = 1234;
-    type = 'F';
+  if (dir == 0xff) {
+    uint8_t f = esxdos_f_open(name, 'r');
 
-    if ((entry.dir[0] == '.') && (!listall)) continue;
+    if (f != 0xff) {
+      struct esxdos_stat st;
 
-    info = (struct esxdos_dirent_slice *)&entry.dir[ESXDOS_NAME_MAX+1];
+      if (esxdos_f_fstat(f, &st) < 0) {
+        perror("ls");
+      } else {
+        if (listlong) {
+          printf("F %6u %s %s\n", st.size, time, name);
+        } else {
+          printf("%-19s\n", name);
+        }
+      }
 
-    if (info->attr == 0) {
-      type = 'D';
-      col = COLOR_BLUE;
+      esxdos_f_close(f);
+    }
+  } else { 
+    while (!esxdos_f_readdir(dir, &entry)) {
+      struct esxdos_dirent_slice *info; // info -> attr, date, size
+      col = COLOR_DEFAULT;
+      type = 'F';
+
+      if ((entry.dir[0] == '.') && (!listall)) continue;
+
+      info = (struct esxdos_dirent_slice *)&entry.dir[ESXDOS_NAME_MAX+1];
+
+      if (info->attr & ESXDOS_ATTR_DIR) {
+        type = 'D';
+        col = COLOR_BLUE;
+      }
+
+      size = info->size;
+
+      if (listlong) {
+        textcolor(COLOR_DEFAULT); printf("%c %6u %s ", type, info->size, time);
+        textcolor(col);           printf("%s", entry.dir);
+      } else {
+        textcolor(col);           printf("%-19s", entry.dir);
+      }
+
+      if ((files++ % columns) == 0) printf("\n");
     }
 
-    if (listlong) {
-      textcolor(COLOR_DEFAULT); printf("%c %6u %s ", type, info->size, time);
-      textcolor(col);           printf("%s", entry.dir);
-    } else {
-      textcolor(col);           printf("%-19s", entry.dir);
-    }
-
-    if ((files++ % columns) == 0) printf("\n");
+    esxdos_f_close(dir);
   }
 
   if ((columns > 1) && (files % columns) == 0) printf("\n");
-
-  closedir(dir);
 
   return (0);
 }

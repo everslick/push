@@ -186,7 +186,7 @@ static void cmd_rm(uint8_t argc, char **argv) {
       printf("rm: removing '%s'\n", path);
     }
 
-    if (remove(path)) {
+    if (unlink(path)) {
       perror("rm");
     }
   } while (*++argv);
@@ -376,45 +376,53 @@ static void cmd_ls(uint8_t argc, char **argv) {
 #if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
     fileio_ls(flags, path);
 #else
+    const char *time = "2000/12/31 00:00";
     DIR *dir = opendir(path);
     struct dirent *entry;
     uint8_t files = 1;
+    struct stat st;
 
     if (!dir) {
-      perror("ls");
-      return;
-    }
-
-    while ((entry = readdir(dir))) {
-      const char *time = "2000/12/31 00:00";
-      uint8_t col = COLOR_DEFAULT;
-      const char *type = "FILE";
-      size_t size = 0;
-      struct stat st;
-
-      if ((entry->d_name[0] == '.') && (!listall)) continue;
-
-      if (entry->d_type == DT_DIR) {
-        type = "DIR ";
-        col = COLOR_BLUE;
+      if (stat(path, &st) < 0) {
+        perror("ls");
       } else {
-        stat(entry->d_name, &st);
-        size = st.st_size;
+        if (listlong) {
+          printf("FILE %6u %s %s\n", st.st_size, time, path);
+        } else {
+          printf("%-19s\n", path);
+        }
+      }
+    } else {
+      while ((entry = readdir(dir))) {
+        uint8_t col = COLOR_DEFAULT;
+        const char *type = "FILE";
+        size_t size = 0;
+
+        if ((entry->d_name[0] == '.') && (!listall)) continue;
+
+        if (entry->d_type == DT_DIR) {
+          type = "DIR ";
+          col = COLOR_BLUE;
+          size = 0;
+        } else {
+          stat(entry->d_name, &st);
+          size = st.st_size;
+        }
+
+        if (listlong) {
+          textcolor(COLOR_DEFAULT); printf("%s %6u %s ", type, size, time);
+          textcolor(col);           printf("%s", entry->d_name);
+        } else {
+          textcolor(col);           printf("%-19s", entry->d_name);
+        }
+
+        if ((files++ % columns) == 0) printf("\n");
       }
 
-      if (listlong) {
-        textcolor(COLOR_DEFAULT); printf("%s %6u %s ", type, size, time);
-        textcolor(col);           printf("%s", entry->d_name);
-      } else {
-        textcolor(col);           printf("%-19s", entry->d_name);
-      }
-
-      if ((files++ % columns) == 0) printf("\n");
+      closedir(dir);
     }
 
     if ((columns > 1) && (files % columns) == 0) printf("\n");
-
-    closedir(dir);
 #endif
     if (header && argv[1]) printf("\n");
   } while (*++argv);
@@ -493,6 +501,10 @@ uint8_t cli_exec(char *cmd) {
   char *argv[8];
   uint8_t argc;
 
+#ifdef POSIX
+  char *com = strdup(cmd);
+#endif
+
   argc = parse_command(cmd, argv, 8);
 
   if (argc == 0) return (0);
@@ -538,15 +550,29 @@ uint8_t cli_exec(char *cmd) {
   } else if (!strcmp(*argv, "test")) {
     term_push_keys(input);
   } else {
-#ifdef __CBM__
-    if (argv[0][0] == '$') {
+    if ((argv[0][0] == '$') || (argv[0][0] == '.')) {
       argc = parse_command("ls -la $", argv, 8);
-      cmd_ls(argc, argv);
-
-      return (0);
+      cmd_ls(argc, argv); return (0);
+    } else if ((argv[0][0] == '.') && (argv[0][1] == '.')) {
+      argc = parse_command("cd ..", argv, 8);
+      cmd_cd(argc, argv); return (0);
+    } else if (argv[0][0] == '/') {
+      argc = parse_command("cd /", argv, 8);
+      cmd_cd(argc, argv); return (0);
     }
 
-    exec(*argv, NULL); // will not return
+#ifdef __CBM__
+    if (exec(*argv, NULL) != -1) return (0);
+#endif
+
+#ifdef POSIX
+    int ret = system(com);
+
+    free(com);
+
+    printf("system returned %i\n", ret);
+
+    if (ret != -1) return (0);
 #endif
 
     printf("%s: command not found\n", *argv);
