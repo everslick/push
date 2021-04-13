@@ -115,7 +115,7 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
   uint8_t col, listlong = 0, listall = 0, columns = 2;
   uint8_t files = 1, dev = getcurrentdevice();
   struct cbm_dirent entry;
-  char *name, *type;
+  char *name, type;
   size_t size;
 
   if (path[0] == '.' && !path[1]) {

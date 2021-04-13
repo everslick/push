@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-char *fileio_getcwd(char buf[], uint8_t size);
+char *fileio_getcwd(char *buf, uint8_t size);
 
-int8_t fileio_version(char buf[], uint8_t size);
+int8_t fileio_version(char *buf, uint8_t size);
 
 int8_t fileio_chdir(const char *dir);
 int8_t fileio_mkdir(const char *dir);
