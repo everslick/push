@@ -53,6 +53,10 @@ DEFINES += -DC64 -DHAVE_FILEIO -DHAVE_SDIEC
 SOURCES += sdiec.c
 endif
 
+ifeq ($(MACHINE),atari)
+DEFINES += -DATARI
+endif
+
 ifeq ($(MACHINE),m65)
 DEFINES += -DM65
 endif
@@ -114,6 +118,9 @@ c65:
 c64:
 	$(MAKE) SDK=cc65 MACHINE=c64
 
+atari:
+	$(MAKE) SDK=cc65 MACHINE=atari
+
 c64emu: clean c64
 	x64 $(PROGRAM)-c64.prg
 
@@ -128,6 +135,12 @@ zxemu: clean zx
 
 zxnemu: clean zxn
 	zesarux --romfile ../../next.rom --machine TBBlue $(PROGRAM)-zxn.tap
+
+xeemu: clean atari
+	atari800 -xe $(PROGRAM)-atari.prg
+
+xlemu: clean atari
+	atari800 -xl $(PROGRAM)-atari.prg
 
 ########################################
 
