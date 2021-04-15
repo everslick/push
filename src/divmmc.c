@@ -111,7 +111,7 @@ int8_t fileio_ls(uint8_t flags, char *path) {
 
       esxdos_f_close(f);
     }
-  } else { 
+  } else {
     while (!esxdos_f_readdir(dir, &entry)) {
       struct esxdos_dirent_slice *info; // info -> attr, date, size
       col = COLOR_DEFAULT;
@@ -135,13 +135,17 @@ int8_t fileio_ls(uint8_t flags, char *path) {
         textcolor(col);           printf("%-19s", entry.dir);
       }
 
-      if ((files++ % columns) == 0) printf("\n");
+      if ((files++ % columns) == 0) {
+        printf("\n");
+      }
     }
 
     esxdos_f_close(dir);
   }
 
-  if ((columns > 1) && (files % columns) == 0) printf("\n");
+  if ((columns > 1) && (files % columns) == 0) {
+    printf("\n");
+  }
 
   return (0);
 }

@@ -145,4 +145,4 @@ clean:
 	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf
 
 distclean: clean
-	$(RM) $(BIN) *.prg *.tap test push-zx
+	$(RM) $(BIN) *.prg *.tap test push-zx push-zxn

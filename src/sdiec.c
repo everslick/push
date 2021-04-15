@@ -18,12 +18,22 @@
 
 #include "fileio.h"
 
+//#define VERBOSE
+
 static char cwd[64];
 
 static char errstr[17];
 static int8_t errnum;
 
-//#define VERBOSE
+struct stat {
+  char name[16+1];
+  size_t size;
+  uint8_t type;
+};
+
+static int8_t cache_entry_stat(const char *name, struct stat *st) {
+  return (-1);
+}
 
 static int8_t snd_drv_cmd(const char *format, ...) {
   uint8_t s = 3, d = 0;
@@ -114,17 +124,14 @@ int8_t fileio_mkfs(const char *name) {
 int8_t fileio_ls(uint8_t flags, const char *path) {
   uint8_t col, listlong = 0, listall = 0, columns = 2;
   uint8_t files = 1, dev = getcurrentdevice();
+  char *time = "2000/12/31 00:00";
   struct cbm_dirent entry;
   char *name, type;
+  struct stat st;
   size_t size;
 
   if (path[0] == '.' && !path[1]) {
     path = "$";
-  }
-
-  if (cbm_opendir(1, dev, path)) {
-    perror("ls");
-    return (-1);
   }
 
   //  1  2  4  8
@@ -134,49 +141,60 @@ int8_t fileio_ls(uint8_t flags, const char *path) {
   if (flags & 0x04) { columns = 1; listlong = 1; }
   if (flags & 0x08) { columns = 1;               }
 
-  while (!cbm_readdir(1, &entry)) {
-    char *time = "2000/12/31 00:00";
-    col = COLOR_DEFAULT;
-    type = 'F';
-
-    if ((entry.name[0] == '.') && (!listall)) continue;
-
-    if (entry.type == CBM_T_DIR) {
-      type = 'D';
-      col = COLOR_BLUE;
-    } else if (entry.type == CBM_T_HEADER) {
-      if (!listall) continue;
-
-      type = 'H';
-      col = COLOR_CYAN;
-      revers(1);
-    }
-
-    if (listlong && (type != 'H')) {
-      textcolor(COLOR_DEFAULT);
-      printf("%c %6u %s ", type, entry.size, time);
-      textcolor(col);
-      printf("%s", entry.name);
+  if (cbm_opendir(1, dev, path)) {
+    if (cache_entry_stat(path, &st) < 0) {
+      perror("ls");
     } else {
-      textcolor(col);
-      printf("%-19s", entry.name);
-    }
-
-    if (type == 'H') {
-      revers(0);
-      printf("\n");
-    } else {
-      if ((files++ % columns) == 0) {
-        printf("\n");
+      if (listlong) {
+        printf("F %6u %s %s\n", st.size, time, path);
+      } else {
+        printf("%-19s\n", path);
       }
     }
+  } else { 
+    while (!cbm_readdir(1, &entry)) {
+      col = COLOR_DEFAULT;
+      type = 'F';
+
+      if ((entry.name[0] == '.') && (!listall)) continue;
+
+      if (entry.type == CBM_T_DIR) {
+        type = 'D';
+        col = COLOR_BLUE;
+      } else if (entry.type == CBM_T_HEADER) {
+        if (!listall) continue;
+
+        type = 'H';
+        col = COLOR_CYAN;
+        revers(1);
+      }
+
+      if (listlong && (type != 'H')) {
+        textcolor(COLOR_DEFAULT);
+        printf("%c %6u %s ", type, entry.size, time);
+        textcolor(col);
+        printf("%s", entry.name);
+      } else {
+        textcolor(col);
+        printf("%-19s", entry.name);
+      }
+
+      if (type == 'H') {
+        revers(0);
+        printf("\n");
+      } else {
+        if ((files++ % columns) == 0) {
+          printf("\n");
+        }
+      }
+    }
+
+    cbm_closedir(1);
   }
 
   if ((columns > 1) && (files % columns) == 0) {
     printf("\n");
   }
-
-  cbm_closedir(1);
 
   return (0);
 }
