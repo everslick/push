@@ -26,6 +26,7 @@ compiled for:
 
 * [C64](https://wikipedia.org/wiki/Commodore_64) with [cc65](https://www.cc65.org)
 * [ZX Spectrum](https://wikipedia.org/wiki/ZX_Spectrum) with [z88dk](https://z88dk.org)
+* [Atari800](https://wikipedia.org/wiki/Atari_800) with [cc65](https://www.cc65.org)
 * [Spectrum Next](https://www.specnext.com/about/) with [z88dk](https://z88dk.org)
 * ~[MEGA65](https://mega65.org) with [kickc](https://gitlab.com/camelot/kickc)~
 
