@@ -208,6 +208,10 @@ uint8_t term_get_key(lined_t *l) {
 
   if ((c == 10) || (c == 13)) c = TERM_KEY_ENTER;
 
+#ifdef ATARI
+  if (c == 155) c = TERM_KEY_ENTER;
+#endif
+
 #ifdef ZX
   if (c ==  12) c = TERM_KEY_BACKSPACE;
   if (c ==  14) c = TERM_KEY_TAB;
