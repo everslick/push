@@ -1,6 +1,8 @@
 #ifndef _FILEIO_H_
 #define _FILEIO_H_
 
+#ifdef HAVE_FILEIO
+
 #include <stdint.h>
 
 char *fileio_getcwd(char *buf, uint8_t size);
@@ -36,5 +38,7 @@ void fileio_error(const char *cmd);
 **      -1  =   [open/write failed]
 **      -2  =   [read status failed]
 */
+
+#endif // HAVE_FILEIO
 
 #endif // _FILEIO_H_

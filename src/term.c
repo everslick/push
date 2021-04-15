@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -200,6 +201,11 @@ void term_refresh_line(lined_t *l, char *buf, uint8_t len) {
 
 uint8_t term_get_key(lined_t *l) {
   uint8_t c = keys ? *keys++ : cgetc();
+
+#ifdef POSIX
+  // slow down a bit
+  if (keys) usleep(30 * 1000); // 30ms
+#endif
 
   // end of input stream
   if (keys && (*keys == 0)) {

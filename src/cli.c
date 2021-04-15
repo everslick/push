@@ -4,24 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "fileio.h"
 #include "parse.h"
 #include "lined.h"
 #include "term.h"
 #include "cli.h"
 
 #include "push.h"
-
-#ifdef HAVE_FILEIO
-
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
-#include "fileio.h"
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-
-#endif // HAVE_FILEIO
 
 #define _mkstr_(_s_)  #_s_                                                      
 #define mkstr(_s_)    _mkstr_(_s_)
@@ -69,7 +58,7 @@ static const char input[] = {
   " a=home  u=up\n"          \
   " e=end   g=down\n"      
 
-#else
+#else // ZX
 
 #define KEYS                          \
   " c=break b=left  l=cls  k=ceol\n"  \
@@ -77,7 +66,7 @@ static const char input[] = {
   " a=home  p=up    r=char w=cword\n" \
   " e=end   n=down  t=swap\n"
 
-#endif
+#endif // ZX
 
 static void not_implemented(const char *cmd) {
   printf("%s: not implemented\n", cmd);
@@ -223,15 +212,9 @@ static void cmd_mkdir(uint8_t argc, char **argv) {
       printf("mkdir: creating directory '%s'\n", path);
     }
 
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
     if (fileio_mkdir(path)) {
       fileio_error("mkdir");
     }
-#else
-    if (mkdir(path, mode)) {
-      perror("mkdir");
-    }
-#endif
   } while (*++argv);
 #else
   not_implemented(*argv);
@@ -264,15 +247,9 @@ static void cmd_rmdir(uint8_t argc, char **argv) {
       printf("rmdir: removing directory '%s'\n", path);
     }
 
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
     if (fileio_rmdir(path)) {
       fileio_error("rmdir");
     }
-#else
-    if (rmdir(path) < 0) {
-      perror("rmdir");
-    }
-#endif
   } while (*++argv);
 #else
   not_implemented(*argv);
@@ -283,11 +260,7 @@ static void cmd_pwd(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
   char *pwd;
 
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
   pwd = fileio_getcwd(scratch, sizeof (scratch));
-#else
-  pwd = getcwd(scratch, sizeof (scratch));
-#endif
 
   if (pwd) {
     printf("%s\n", pwd);
@@ -333,24 +306,17 @@ static void cmd_cd(uint8_t argc, char **argv) {
     return;
   }
 
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
   if (fileio_chdir(argv[1])) {
     fileio_error(*argv);
   }
 #else
-  if (chdir(argv[1])) {
-    perror(*argv);
-  }
-#endif
-
-#else // HAVE_FILEIO
   not_implemented(*argv);
-#endif // HAVE_FILEIO
+#endif
 }
 
 static void cmd_ls(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-  uint8_t header, flags, listlong = 0, listall = 0, columns = 4;
+  uint8_t header, flags;
 
   flags = parse_optflags(argc, argv, "?al1");
 
@@ -358,10 +324,6 @@ static void cmd_ls(uint8_t argc, char **argv) {
     printf("usage: %s [-a] [-l] [-1] [path]\n", *argv);
     return;
   }
-
-  if (flags & 0x02) { listall = 1;               }
-  if (flags & 0x04) { columns = 1; listlong = 1; }
-  if (flags & 0x08) { columns = 1;               }
 
   argv += optind;
 
@@ -373,72 +335,18 @@ static void cmd_ls(uint8_t argc, char **argv) {
     if (!path) path = ".";
     if (header) printf("%s:\n", path);
 
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
     fileio_ls(flags, path);
-#else
-    const char *time = "2000/12/31 00:00";
-    DIR *dir = opendir(path);
-    struct dirent *entry;
-    uint8_t files = 1;
-    struct stat st;
 
-    if (!dir) {
-      if (stat(path, &st) < 0) {
-        perror("ls");
-      } else {
-        if (listlong) {
-          printf("FILE %6u %s %s\n", st.st_size, time, path);
-        } else {
-          printf("%-19s\n", path);
-        }
-      }
-    } else {
-      while ((entry = readdir(dir))) {
-        uint8_t col = COLOR_DEFAULT;
-        const char *type = "FILE";
-        size_t size = 0;
-
-        if ((entry->d_name[0] == '.') && (!listall)) continue;
-
-        if (entry->d_type == DT_DIR) {
-          type = "DIR ";
-          col = COLOR_BLUE;
-          size = 0;
-        } else {
-          stat(entry->d_name, &st);
-          size = st.st_size;
-        }
-
-        if (listlong) {
-          textcolor(COLOR_DEFAULT); printf("%s %6u %s ", type, size, time);
-          textcolor(col);           printf("%s", entry->d_name);
-        } else {
-          textcolor(col);           printf("%-19s", entry->d_name);
-        }
-
-        if ((files++ % columns) == 0) printf("\n");
-      }
-
-      closedir(dir);
-    }
-
-    if ((columns > 1) && (files % columns) == 0) printf("\n");
-#endif
     if (header && argv[1]) printf("\n");
   } while (*++argv);
-
-#else // HAVE_FILEIO
+#else
   not_implemented(*argv);
-#endif // HAVE_FILEIO
+#endif
 }
 
 static void cmd_mount(uint8_t argc, char **argv) {
 #ifdef HAVE_FILEIO
-
-#if defined(HAVE_SDIEC) || defined(HAVE_DIVMMC)
   fileio_mount(NULL, NULL);
-#endif
-
 #else
   not_implemented(*argv);
 #endif

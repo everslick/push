@@ -1,4 +1,4 @@
-#ifdef HAVE_ESXDOSC
+#ifdef HAVE_ESXDOS
 
 #ifndef ZXN
 #error "ESXDOS is only available on ZXNext."
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <arch/zxn/esx.h>
+#include <arch/zxn/esxdos.h>
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -26,34 +26,18 @@ int rename(const char *old, const char *new) {
 }
 
 int8_t fileio_version(char *buf, uint8_t size) {
-  uint8_t drv = esx_m_getdrv();
-  struct esx_device ed;
-  int8_t err = 0;
-
-  err = esx_disk_info(drv, &ed);
-
-  if (!err) {
-    snprintf(buf, size, "%u.%u", ed.path>>3, ed.path & 0x03);
-  } else {
-    snprintf(buf, size, "error: %i", err);
-  }
-
-  return (err);
+  return (-1);
 }
 
 char *fileio_getcwd(char *buf, uint8_t size) {
+  char cwd[ESXDOS_PATH_MAX + 1];
+
   if (buf && size) {
     buf[0] = '\0';
   }
 
-  if (size >= ESXDOS_PATH_MAX) {
-    esx_f_getcwd(buf);
-  } else {
-    char cwd[ESXDOS_PATH_MAX + 1];
-
-    if (esx_f_getcwd(cwd) != 0xff) {
-      strncpy(buf, cwd, size);
-    }
+  if (esx_f_getcwd(cwd) != 0xff) {
+    strncpy(buf, cwd, size);
   }
 
   return (buf);
@@ -116,11 +100,11 @@ int8_t fileio_ls(uint8_t flags, char *path) {
       col = COLOR_DEFAULT;
       type = 'F';
 
-      if ((entry.dir[0] == '.') && (!listall)) continue;
+      if ((entry.name[0] == '.') && (!listall)) continue;
 
-      info = (struct esx_dirent_slice *)&entry.dir[ESXDOS_NAME_MAX+1];
+      info = (struct esx_dirent_slice *)&entry.name[ESXDOS_NAME_MAX+1];
 
-      if (info->attr & ESXDOS_ATTR_DIR) {
+      if (entry.attr & ESXDOS_ATTR_DIR) {
         type = 'D';
         col = COLOR_BLUE;
       }
@@ -129,9 +113,9 @@ int8_t fileio_ls(uint8_t flags, char *path) {
 
       if (listlong) {
         textcolor(COLOR_DEFAULT); printf("%c %6u %s ", type, info->size, time);
-        textcolor(col);           printf("%s", entry.dir);
+        textcolor(col);           printf("%s", entry.name);
       } else {
-        textcolor(col);           printf("%-19s", entry.dir);
+        textcolor(col);           printf("%-19s", entry.name);
       }
 
       if ((files++ % columns) == 0) printf("\n");

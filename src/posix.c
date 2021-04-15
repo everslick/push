@@ -1,8 +1,13 @@
 #include <termios.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include "posix.h"
 
@@ -304,4 +309,107 @@ uint8_t posix_init(void) {
 
 void posix_fini(void) {
 	tcsetattr(0, TCSANOW, &initial_settings);
+}
+
+char *fileio_getcwd(char *buf, uint8_t size) {
+  return (getcwd(buf, size));
+}
+
+uint8_t fileio_mkdir(const char *dir) {
+  if (mkdir(dir, 0777)) {
+    perror("mkdir");
+
+    return (1);
+  }
+
+  return (0);
+}
+
+uint8_t fileio_rmdir(const char *dir) {
+  if (rmdir(dir)) {
+    perror("rmdir");
+
+    return (1);
+  }
+
+  return (0);
+}
+
+uint8_t fileio_chdir(const char *dir) {
+  if (chdir(dir)) {
+    perror("chdir");
+
+    return (1);
+  }
+
+  return (0);
+}
+
+uint8_t fileio_ls(uint8_t flags, const char *path) {
+  uint8_t listlong = 0, listall = 0, columns = 4;
+  const char *time = "2000/12/31 00:00";
+  DIR *dir = opendir(path);
+  struct dirent *entry;
+  uint8_t files = 1;
+  struct stat st;
+
+  if (flags & 0x02) { listall = 1;               }
+  if (flags & 0x04) { columns = 1; listlong = 1; }
+  if (flags & 0x08) { columns = 1;               }
+
+  if (!dir) {
+    if (stat(path, &st) < 0) {
+      perror("ls");
+    } else {
+      if (listlong) {
+        cprintf("FILE %6li %s %s\n", st.st_size, time, path);
+      } else {
+        cprintf("%-19s\n", path);
+      }
+    }
+  } else {
+    while ((entry = readdir(dir))) {
+      uint8_t col = COLOR_DEFAULT;
+      const char *type = "FILE";
+      size_t size = 0;
+
+      if ((entry->d_name[0] == '.') && (!listall)) continue;
+
+      if (entry->d_type == DT_DIR) {
+        type = "DIR ";
+        col = COLOR_BLUE;
+        size = 0;
+      } else {
+        stat(entry->d_name, &st);
+        size = st.st_size;
+      }
+
+      if (listlong) {
+        textcolor(COLOR_DEFAULT); cprintf("%s %6li %s ", type, size, time);
+        textcolor(col);           cprintf("%s", entry->d_name);
+      } else {
+        textcolor(col);           cprintf("%-19s", entry->d_name);
+      }
+
+      if ((files++ % columns) == 0) {
+        cprintf("\n");
+      }
+    }
+
+    closedir(dir);
+  }
+
+  if ((columns > 1) && (files % columns) == 0) {
+    cprintf("\n");
+  }
+
+  return (0);
+}
+
+void fileio_mount(const char *dev, const char *dir) {
+  int err = system("mount");
+}
+
+void fileio_error(const char *cmd) {
+  perror(cmd);
 }

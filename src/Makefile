@@ -27,7 +27,7 @@ CC       = cl65
 BIN      = $(TARGET).prg
 CFLAGS   = -t $(MACHINE) --create-dep $(<:.c=.d) -O
 LDFLAGS  = -t $(MACHINE) -m $(TARGET).map
-DEFINES += -DCC65 -DHAVE_CONIO -DHAVE_PETSCII
+DEFINES += -DCC65 -DHAVE_CONIO
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION -DHAVE_OSD
 endif
 
@@ -35,12 +35,12 @@ ifeq ($(SDK),kickc)
 BIN      = $(TARGET).prg
 CFLAGS   = -a -Sc -Si -Wfragment
 DEFINES += -DNULL=\(\(void*\)0\)
-DEFINES += -DKICKC -DHAVE_CONIO -DHAVE_PETSCII
+DEFINES += -DKICKC -DHAVE_CONIO
 DEFINES += -DHAVE_HINTS -DHAVE_OSD
 endif
 
 ifeq ($(SDK),z88dk)
-BIN      = $(TARGET)
+BIN      = $(TARGET)$(COLS)
 CFLAGS   = -vn -startup=1 -create-app -I../z88dk/include # --hardware-keyboard
 CFLAGS  += -pragma-define:CLIB_EXIT_STACK_SIZE=0
 CFLAGS  += -pragma-define:CLIB_CONIO_NATIVE_COLOUR=1
@@ -48,17 +48,23 @@ DEFINES += -DZ88DK -DAMALLOC -DHAVE_CONIO -DHAVE_OSD -DHAVE_SWCURSOR
 DEFINES += -DHAVE_HISTORY -DHAVE_HINTS -DHAVE_COMPLETION
 endif
 
+ifeq ($(MACHINE),m65)
+DEFINES += -DM65 -DHAVE_PETSCII
+endif
+
 ifeq ($(MACHINE),c64)
-DEFINES += -DC64 -DHAVE_FILEIO -DHAVE_SDIEC
+DEFINES += -DC64 -DHAVE_FILEIO -DHAVE_SDIEC -DHAVE_PETSCII
 SOURCES += sdiec.c
 endif
 
 ifeq ($(MACHINE),atari)
-DEFINES += -DATARI
+DEFINES += -DATARI -DHAVE_FILEIO -DHAVE_ATARI
+SOURCES += atari.c
 endif
 
-ifeq ($(MACHINE),m65)
-DEFINES += -DM65
+ifeq ($(MACHINE),atarixl)
+DEFINES += -DATARI -DHAVE_FILEIO -DHAVE_ATARI
+SOURCES += atari.c
 endif
 
 ifeq ($(MACHINE),zx)
@@ -72,15 +78,9 @@ SOURCES += zxspec.c divmmc.c
 endif
 
 ifeq ($(MACHINE),zxn)
-DEFINES += -DZXN
+DEFINES += -DZXN -DHAVE_FILEIO -DHAVE_ESXDOS
 CFLAGS  += -lesxdos -O3 -clib=classic
 SOURCES += zxnext.c esxdos.c
-endif
-
-ifdef TEST
-PROGRAM = test
-SOURCES = test.c
-SOURCE  = test.c
 endif
 
 DEFINES += -DTOOLCHAIN=$(SDK) -DMACHINE=$(MACHINE)
@@ -102,45 +102,56 @@ z88dk:
 
 zx64:
 	$(MAKE) SDK=z88dk MACHINE=zx COLS=64 z88dk
+	chmod +x $(PROGRAM)-zx64.tap
 
-zx:
+zx zx32:
 	$(MAKE) SDK=z88dk MACHINE=zx COLS=32 z88dk
+	chmod +x $(PROGRAM)-zx32.tap
 
 zxn:
 	$(MAKE) SDK=z88dk MACHINE=zxn z88dk
+	chmod +x $(PROGRAM)-zxn.tap
 
 m65:
 	$(MAKE) SDK=kickc MACHINE=m65 kickc
+	chmod +x $(PROGRAM)-m65.prg
 
 c65:
 	$(MAKE) SDK=cc65 MACHINE=m65
+	chmod +x $(PROGRAM)-m65.prg
 
 c64:
 	$(MAKE) SDK=cc65 MACHINE=c64
+	chmod +x $(PROGRAM)-c64.prg
 
-atari:
+xe:
 	$(MAKE) SDK=cc65 MACHINE=atari
+	chmod +x $(PROGRAM)-atari.prg
 
-c64emu: clean c64
+xl:
+	$(MAKE) SDK=cc65 MACHINE=atarixl
+	chmod +x $(PROGRAM)-atarixl.prg
+
+c64emu: c64
 	x64 $(PROGRAM)-c64.prg
 
-m65emu: clean m65
+m65emu: m65
 	xmega65 -besure -prg main.prg
 
-zx64emu: clean zx64
+zx64emu: zx64
 	zesarux --romfile ../../48.rom --machine 48k $(PROGRAM)-zx.tap
 
-zxemu: clean zx
+zxemu: zx
 	zesarux --romfile ../../48.rom --machine 48k $(PROGRAM)-zx.tap
 
-zxnemu: clean zxn
+zxnemu: zxn
 	zesarux --romfile ../../next.rom --machine TBBlue $(PROGRAM)-zxn.tap
 
-xeemu: clean atari
+xeemu: xe
 	atari800 -xe $(PROGRAM)-atari.prg
 
-xlemu: clean atari
-	atari800 -xl $(PROGRAM)-atari.prg
+xlemu: xl
+	atari800 -xl $(PROGRAM)-atarixl.prg
 
 ########################################
 
@@ -158,4 +169,4 @@ clean:
 	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf
 
 distclean: clean
-	$(RM) $(BIN) *.prg *.tap test push-zx push-zxn
+	$(RM) $(BIN) *.prg *.tap push-*

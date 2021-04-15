@@ -15,9 +15,12 @@ all:
 	$(MAKE) -C src c64
 	mv src/push-c64.prg .
 	$(MAKE) -C src clean
-	# Atari 800
-	$(MAKE) -C src xl xe
+	# Atari 800XL
+	$(MAKE) -C src xl
 	mv src/push-atarixl.prg .
+	$(MAKE) -C src clean
+	# Atari 800
+	$(MAKE) -C src xe
 	mv src/push-atari.prg .
 	$(MAKE) -C src clean
 	# POSIX
