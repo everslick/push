@@ -1,0 +1,30 @@
+all:
+	# ZX Spectrum 32 columns
+	$(MAKE) -C src zx32
+	mv src/push-zx32.tap .
+	$(MAKE) -C src clean
+	# ZX Spectrum 64 columns
+	$(MAKE) -C src zx64
+	mv src/push-zx64.tap .
+	$(MAKE) -C src clean
+	# Spectrum Next
+	$(MAKE) -C src zxn
+	mv src/push-zxn.tap .
+	$(MAKE) -C src clean
+	# Commodore 64
+	$(MAKE) -C src c64
+	mv src/push-c64.prg .
+	$(MAKE) -C src clean
+	# Atari 800
+	$(MAKE) -C src xl xe
+	mv src/push-atarixl.prg .
+	mv src/push-atari.prg .
+	$(MAKE) -C src clean
+	# POSIX
+	$(MAKE) -C src
+	mv src/push .
+	$(MAKE) -C src distclean
+
+clean:
+	rm push*
+	rm -rf foo
