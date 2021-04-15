@@ -209,7 +209,17 @@ uint8_t term_get_key(lined_t *l) {
   if ((c == 10) || (c == 13)) c = TERM_KEY_ENTER;
 
 #ifdef ATARI
+  if (c == 126) c = TERM_KEY_BACKSPACE;
+  if (c == 127) c = TERM_KEY_TAB;
+  if (c == 253) c = TERM_KEY_BELL;
+  if (c == 254) c = TERM_KEY_DELETE;
   if (c == 155) c = TERM_KEY_ENTER;
+  if (c == 156) c = TERM_KEY_CTRL_U; // DEL LINE
+  if (c == 125) c = TERM_KEY_CTRL_L; // CLS
+  if (c ==  28) c = TERM_KEY_CTRL_P; // UP
+  if (c ==  29) c = TERM_KEY_CTRL_N; // DOWN
+  if (c ==  30) c = TERM_KEY_CTRL_B; // LEFT
+  if (c ==  31) c = TERM_KEY_CTRL_F; // RIGHT
 #endif
 
 #ifdef ZX
