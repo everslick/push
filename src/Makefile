@@ -34,7 +34,6 @@ endif
 ifeq ($(SDK),kickc)
 BIN      = $(TARGET).prg
 CFLAGS   = -a -Sc -Si -Wfragment
-DEFINES += -DNULL=\(\(void*\)0\)
 DEFINES += -DKICKC -DHAVE_CONIO
 DEFINES += -DHAVE_HINTS -DHAVE_OSD
 endif
@@ -50,6 +49,7 @@ endif
 
 ifeq ($(MACHINE),m65)
 DEFINES += -DM65 -DHAVE_PETSCII
+SOURCES += mega65.c
 endif
 
 ifeq ($(MACHINE),c64)
@@ -58,12 +58,12 @@ SOURCES += sdiec.c
 endif
 
 ifeq ($(MACHINE),atari)
-DEFINES += -DATARI -DHAVE_FILEIO -DHAVE_ATARI
+DEFINES += -DATARI -DHAVE_FILEIO
 SOURCES += atari.c
 endif
 
 ifeq ($(MACHINE),atarixl)
-DEFINES += -DATARI -DHAVE_FILEIO -DHAVE_ATARI
+DEFINES += -DATARI -DHAVE_FILEIO
 SOURCES += atari.c
 endif
 
@@ -95,7 +95,7 @@ all: $(TARGET)
 ########################################
 
 kickc:
-	kickc.sh -p $(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
+	kickc.sh -p mega65 $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
 z88dk:
 	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)

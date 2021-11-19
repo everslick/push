@@ -1,7 +1,10 @@
 #include <string.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#ifdef POSIX
+#include <unistd.h> // usleep()
+#endif
 
 #include "term.h"
 

@@ -1,6 +1,8 @@
 #ifndef _PUSH_H_
 #define _PUSH_H_
 
-extern char scratch[128];
+#define SCRATCH_SIZE 128
+
+extern char scratch[SCRATCH_SIZE];
 
 #endif // _PUSH_H_

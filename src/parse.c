@@ -16,7 +16,7 @@ char *parse_optarg;        /* argument associated with option */
 #define  BADARG ':'
 #define  EMSG   ""
 
-int8_t parse_getopt(uint8_t nargc, char **nargv, const char *ostr) {
+uint8_t parse_getopt(uint8_t nargc, char **nargv, const char *ostr) {
   static char *place = EMSG;       /* option letter processing */
   char *oli;                       /* option letter list index */
 
@@ -31,20 +31,20 @@ int8_t parse_getopt(uint8_t nargc, char **nargv, const char *ostr) {
     if (parse_optind >= nargc || *(place = nargv[parse_optind]) != '-') {
       place = EMSG;
 
-      return (-1);
+      return (255);
     }
 
     if (place[1] && *++place == '-') { /* found "--" */
       ++parse_optind;
       place = EMSG;
 
-      return (-1);
+      return (255);
     }
   }                                /* option letter okay? */
 
   if ((parse_optopt = *place++) == ':' || !(oli = strchr(ostr, parse_optopt))) {
     /* if the user didn't specify '-' as an option, assume it means -1. */
-    if (parse_optopt == '-') return (-1);
+    if (parse_optopt == '-') return (255);
 
     if (!*place) ++parse_optind;
 
@@ -87,7 +87,7 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
   char *s = cmd, *t = s + strlen(s) - 1;
 
-  while ((t >= s) && (*t && (*t == ' '))) *t-- = '\0'; /* trim end */
+  while ((t >= s) && (*t && (*t == ' '))) *t-- = 0;//'\0'; /* trim end */
 
   for (i=0; i<args; i++) {
     argv[i] = NULL;
@@ -112,11 +112,11 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
     }
 
     if (*s == '"') {
-      *s++ = '\0'; /* remove and skip */
+      *s++ = 0;//'\0'; /* remove and skip */
       if (*s == '"') first = 1;
       quote ^= 1;
     } else if ((!quote) && (*s == ' ')) {
-      *s++ = '\0'; /* remove and skip */
+      *s++ = 0;//'\0'; /* remove and skip */
       first = 1;
     } else {
       s++;
@@ -127,8 +127,7 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
 }
 
 uint8_t parse_optflags(uint8_t argc, char **argv, const char *optstr) {
-  uint8_t n, i, flags = 0;
-  int opt;
+  uint8_t opt, n, i, flags = 0;
 
   n = strlen(optstr);
   if (n > 8) n = 8;
@@ -136,7 +135,7 @@ uint8_t parse_optflags(uint8_t argc, char **argv, const char *optstr) {
   /* reset global option index */
   parse_optreset = 1;
 
-  while ((opt = parse_getopt(argc, argv, optstr)) != -1) {
+  while ((opt = parse_getopt(argc, argv, optstr)) != 255) {
     for (i=0; i<n; i++) {
       if (opt == optstr[i]) flags |= (1<<i);
     }
@@ -155,17 +154,17 @@ const char *parse_dirname(const char *path) {
 
   if (slash) {
     while ((*slash == '/') && (slash != ptr)) {
-      *slash-- = '\0';
+      *slash-- = 0;//'\0';
     }
   }
 
   slash = strrchr(ptr, '/');
 
   if (slash && (slash != ptr)) {
-    *slash = '\0';
+    *slash = 0;//'\0';
   } else {
     if (*ptr != '/') *ptr = '.';
-    ptr[1] = '\0';
+    ptr[1] = 0;//'\0';
   }
 
   return (ptr);
@@ -220,7 +219,7 @@ char *parse_realpath(const char *path) {
 
     *ptr++ = rel ? '.' : '/';
   }
-  *ptr = '\0';
+  *ptr = 0;//'\0';
 
   return (scratch);
 }

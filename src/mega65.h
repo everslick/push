@@ -23,6 +23,13 @@
 
 #include <stdint.h>
 
+#define cprintf printf
+
+int sleep(int seconds);
 uint8_t cgetc(void);
+
+char *strchr(const char *s, char c);
+char *strrchr(const char *s, char c);
+char *strtok(char *s, const char *delim);
 
 #endif // _MEGA65_H_

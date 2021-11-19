@@ -1,5 +1,3 @@
-#ifdef HAVE_ATARI
-
 #ifndef ATARI
 #error "ATARI is only available on XE and XL targets."
 #endif
@@ -59,5 +57,3 @@ void fileio_error(const char *cmd) {
   printf(errstr);
   printf("\n");
 }
-
-#endif // HAVE_ATARI

@@ -5,25 +5,22 @@
 #define POKE(X,Y) (*(unsigned char *)(X))=Y
 #define PEEK(X)   (*(unsigned char *)(X))
 
-int8_t strncmp(const char *s1, const char *s2, uint8_t n) {
-  uint8_t i;
+static uint8_t revers_onoff = 0;
 
-  for (i=0; i<n; i++) {
-    char c1 = toupper(s1[i]);
-    char c2 = toupper(s2[i]);
+void waitvsync(void) {
+  int c = 500;
 
-    if (c1 != c2) {
-      return ((c1>c2) ? 1 : -1);
-    }
-
-    if (!c1 || !c2) break;
-  }
-
-  return (0);
+  while (c--);
 }
 
-int8_t strcmp(const char *s1, const char *s2) {
-  return (strncmp(s1, s2, 255));
+uint8_t revers(uint8_t onoff) {
+  uint8_t old = revers_onoff;
+
+  revers_onoff = onoff;
+
+  cputc((onoff) ? 18 : 148);
+
+  return (old);
 }
 
 uint8_t cgetc(void) {
@@ -36,4 +33,59 @@ uint8_t cgetc(void) {
   POKE(0xD610, 0);
 
   return (k);
+}
+
+int sleep(int seconds) {
+  return (0);
+}
+
+char *strchr(const char *s, char c) {
+  while (*s != c) {
+    if (!*s++) {
+      return (NULL);
+    }
+  }
+
+  return ((char *)s);
+}
+
+char *strrchr(const char *s, char c) {
+  const char *found = NULL, *p;
+
+  if (c == 0) return (strchr(s, 0/*'\0'*/));
+
+  while ((p = strchr(s, c)) != NULL) {
+    found = p;
+    s = p + 1;
+  }
+
+  return ((char *)found);
+}
+
+char *strtok(char *s, const char *delim) {
+  static char *buf;
+  const char *d;
+  char *ret, *b;
+
+  if (s != NULL) buf = s;
+  if (buf[0] == 0/*'\0'*/) return (NULL);
+
+  ret = buf;
+
+  for (b = buf; *b !=0/*'\0'*/; b++) {
+    for (d = delim; *d != 0/*'\0'*/; d++) {
+      if (*b == *d) {
+        *b = 0;//'\0';
+        buf = b + 1;
+
+        if (b == ret) {
+          ret++; continue;
+        }
+
+        return (ret);
+      }
+    }
+  }
+
+  return (ret);
 }

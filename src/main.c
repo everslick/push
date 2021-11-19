@@ -8,7 +8,7 @@
 
 #include "push.h"
 
-char scratch[sizeof (scratch)];
+char scratch[SCRATCH_SIZE];
 
 #ifdef POSIX
 static uint8_t reset_once_after_startup = 1;
@@ -19,9 +19,7 @@ int main(void) {
   uint8_t logout;
   uint8_t restart;
 
-#ifndef KICKC
 loop:
-#endif
 
   lined   = NULL;
   logout  = 0;
@@ -92,9 +90,7 @@ loop:
 
   term_fini();
 
-#ifndef KICKC
   if (restart) goto loop;
-#endif
 
   return (0);
 }

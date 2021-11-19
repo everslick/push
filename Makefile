@@ -1,4 +1,8 @@
 all:
+	# Mega 65
+	#$(MAKE) -C src m65
+	#mv src/push-m65.prg .
+	#$(MAKE) -C src clean
 	# ZX Spectrum 32 columns
 	$(MAKE) -C src zx32
 	mv src/push-zx32.tap .

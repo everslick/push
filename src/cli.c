@@ -1,8 +1,11 @@
 #include <string.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef HAVE_FILEIO
+#include <unistd.h>
+#endif
 
 #include "fileio.h"
 #include "parse.h"
@@ -12,10 +15,13 @@
 
 #include "push.h"
 
-#define _mkstr_(_s_)  #_s_                                                      
-#define mkstr(_s_)    _mkstr_(_s_)
+#ifdef KICKC
+#else
+//#define _mkstr_(_s_)  #_s
+//#define mkstr(_s_)    _mkstr_(_s_)
+#endif
 
-static const char commands[] = {
+static const char *commands =
   "help\0"     "echo\0"     "sleep\0"    "clear\0"
   "reset\0"    "version\0"  "pwd\0"      "mount\0" 
   "cd\0"       "ls\0"       "mv\0"       "rm\0" 
@@ -23,9 +29,9 @@ static const char commands[] = {
   "rmdir\0"    "parse\0"    "test\0"     "logout\0"
   "exit\0"
   "\0" // end marker
-};
+;
 
-static const char input[] = {
+static const char *input =
   "help\r"
   "sleep 2\r"
   "clear\r"
@@ -48,7 +54,7 @@ static const char input[] = {
   "echo bye!\r"
   "sleep 5\r"
   "reset\r"
-};
+;
 
 #ifdef ZX
 
@@ -80,7 +86,7 @@ static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
   uint8_t n = 1;
 
-  printf("available commands:\n" " ");
+  printf("available commands:\n ");
 
   while (*ptr) {
     printf("%-10s", ptr);
@@ -115,9 +121,10 @@ static void cmd_echo(uint8_t argc, char **argv) {
 
 static void cmd_version(uint8_t argc, char **argv) {
   printf("push, version "
-    mkstr(VERSION)   " ("
-    mkstr(MACHINE)   "-"
-    mkstr(TOOLCHAIN) ")\n"
+    //mkstr(VERSION)   " ("
+    //mkstr(MACHINE)   "-"
+    //mkstr(TOOLCHAIN) ")\n"
+    "0.0.3\n"
   );
 }
 
