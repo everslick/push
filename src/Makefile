@@ -2,7 +2,7 @@ PROGRAM  = push
 VERSION  = 0.0.2
 SOURCES  = main.c term.c lined.c cli.c parse.c
 
-export PATH=../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
+export PATH=../../xemu/build/bin:../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
 export ZCCCFG=../../z88dk/lib/config/
 export CC65_HOME=../../cc65/
 
@@ -136,7 +136,7 @@ c64emu: c64
 	x64 $(PROGRAM)-c64.prg
 
 m65emu: m65
-	xmega65 -besure -prg main.prg
+	xmega65.native -besure -prg $(PROGRAM)-m65.prg
 
 zx64emu: zx64
 	zesarux --romfile ../../48.rom --machine 48k $(PROGRAM)-zx.tap

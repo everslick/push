@@ -62,7 +62,8 @@ loop:
     lined_edit(lined, key);
 
     if (key == TERM_KEY_ENTER) {
-      char *cmd = lined_line(lined);
+      //char *cmd = lined_line(lined);
+      char *cmd = lined->buf;
       uint8_t ret;
 
       printf("\n");

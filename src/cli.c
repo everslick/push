@@ -16,9 +16,10 @@
 #include "push.h"
 
 #ifdef KICKC
+#define mkstr(_s_)  #_s_
 #else
-//#define _mkstr_(_s_)  #_s
-//#define mkstr(_s_)    _mkstr_(_s_)
+#define _mkstr_(_s_)  #_s_
+#define mkstr(_s_)    _mkstr_(_s_)
 #endif
 
 static const char *commands =
@@ -84,16 +85,19 @@ static void missing_arg(const char *cmd) {
 
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
-  uint8_t n = 1;
+  uint8_t cols, rows, n = 0;
+
+  term_screen_size(&cols, &rows);
 
   printf("available commands:\n ");
 
   while (*ptr) {
     printf("%-10s", ptr);
-    if ((n++ % 3) == 0) printf("\n ");
+    n += 10;
+    if (n > cols-10) printf("\n ");
     ptr += strlen(ptr) + 1;
   }
-  if ((n % 3) == 0) printf("\n");
+  if (n > cols-10) printf("\n");
 
   printf("\n");
   printf("line editor keys ([ctrl]+[x]):\n");
@@ -121,10 +125,9 @@ static void cmd_echo(uint8_t argc, char **argv) {
 
 static void cmd_version(uint8_t argc, char **argv) {
   printf("push, version "
-    //mkstr(VERSION)   " ("
-    //mkstr(MACHINE)   "-"
-    //mkstr(TOOLCHAIN) ")\n"
-    "0.0.3\n"
+    mkstr(VERSION)   " ("
+    mkstr(MACHINE)   "-"
+    mkstr(TOOLCHAIN) ")\n"
   );
 }
 
