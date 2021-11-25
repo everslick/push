@@ -166,7 +166,8 @@ $(TARGET): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o $(BIN) $^
 
 clean:
-	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf
+	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf push-zx32 push-zx64
 
 distclean: clean
 	$(RM) $(BIN) *.prg *.tap push-*
+	$(RM) -rf foo

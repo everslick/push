@@ -33,5 +33,5 @@ all:
 	$(MAKE) -C src distclean
 
 clean:
-	rm push*
-	rm -rf foo
+	$(RM) push*
+	$(RM) -rf foo
