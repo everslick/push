@@ -15,12 +15,8 @@
 
 #include "push.h"
 
-#ifdef KICKC
-#define mkstr(_s_)  #_s_
-#else
 #define _mkstr_(_s_)  #_s_
 #define mkstr(_s_)    _mkstr_(_s_)
-#endif
 
 static const char *commands =
   "help\0"     "echo\0"     "sleep\0"    "clear\0"
@@ -468,6 +464,7 @@ uint8_t cli_exec(char *cmd) {
   } else if (!strcmp(*argv, "test")) {
     term_push_keys(input);
   } else {
+#ifndef KICKC
     if ((argv[0][0] == '$') || (argv[0][0] == '.')) {
       argc = parse_command("ls -la $", argv, 8);
       cmd_ls(argc, argv); return (0);
@@ -478,6 +475,7 @@ uint8_t cli_exec(char *cmd) {
       argc = parse_command("cd /", argv, 8);
       cmd_cd(argc, argv); return (0);
     }
+#endif
 
 #ifdef __CBM__
     if (exec(*argv, NULL) != -1) return (0);
