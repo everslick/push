@@ -87,11 +87,9 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
   uint8_t i, argc = 0, quote = 0, first = 1;
   char *s = cmd, *t = s + strlen(s) - 1;
 
-  while ((t >= s) && (*t && (*t == ' '))) *t-- = 0;//'\0'; /* trim end */
+  while ((t >= s) && (*t && (*t == ' '))) *t-- = '\0'; /* trim end */
 
-  for (i=0; i<args; i++) {
-    argv[i] = NULL;
-  }
+  memset(argv, args * sizeof (char *), 0);
 
   while (*s) {
     if (first) {
@@ -112,11 +110,11 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
     }
 
     if (*s == '"') {
-      *s++ = 0;//'\0'; /* remove and skip */
+      *s++ = '\0'; /* remove and skip */
       if (*s == '"') first = 1;
       quote ^= 1;
     } else if ((!quote) && (*s == ' ')) {
-      *s++ = 0;//'\0'; /* remove and skip */
+      *s++ = '\0'; /* remove and skip */
       first = 1;
     } else {
       s++;
@@ -154,17 +152,17 @@ const char *parse_dirname(const char *path) {
 
   if (slash) {
     while ((*slash == '/') && (slash != ptr)) {
-      *slash-- = 0;//'\0';
+      *slash-- = '\0';
     }
   }
 
   slash = strrchr(ptr, '/');
 
   if (slash && (slash != ptr)) {
-    *slash = 0;//'\0';
+    *slash = '\0';
   } else {
     if (*ptr != '/') *ptr = '.';
-    ptr[1] = 0;//'\0';
+    ptr[1] = '\0';
   }
 
   return (ptr);
@@ -219,7 +217,7 @@ char *parse_realpath(const char *path) {
 
     *ptr++ = rel ? '.' : '/';
   }
-  *ptr = 0;//'\0';
+  *ptr = '\0';
 
   return (scratch);
 }
