@@ -89,7 +89,7 @@ uint8_t parse_command(char *cmd, char **argv, uint8_t args) {
 
   while ((t >= s) && (*t && (*t == ' '))) *t-- = '\0'; /* trim end */
 
-  memset(argv, args * sizeof (char *), 0);
+  memset(argv, 0, args * sizeof (char *));
 
   while (*s) {
     if (first) {
