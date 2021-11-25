@@ -528,23 +528,10 @@ lined_t *lined_init(void) {
 
   if (!l) return (NULL);
 
-  /* Populate the lined state that we pass to functions implementing
+  /* Initialize the lined state that we pass to functions implementing
    * specific editing functionalities. */
-  l->prompt = NULL;
-  l->buf[0] = 0;
-  l->plen   = 0;
-  l->cols   = 0;
-  l->rows   = 0;
-  l->pos    = 0;
-  l->len    = 0;
-  l->key    = 0;
-  l->flags  = 0x0f;
-#ifdef HAVE_HISTORY
-  l->index  = 0;
-#endif
-#ifdef HAVE_COMPLETION
-  l->lc     = NULL;
-#endif
+  memset(l, 0, sizeof (lined_t));
+  l->flags = 0x0f;
 
   term_screen_size(&l->cols, &l->rows);
 
@@ -564,13 +551,12 @@ void lined_reset(lined_t *l, uint8_t flags) {
 #endif
 
   l->buf[0] = 0;
-  l->pos    = 0;
-  l->len    = 0;
-  l->key    = 0;
-  l->flags  = flags;
+  l->pos = 0;
+  l->len = 0;
+  l->key = 0;
 
   // show the prompt, even when ECHO is off
-  l->flags |= LINED_ECHO;
+  l->flags = flags | LINED_ECHO;
   refresh_line(l);
   l->flags = flags;
 }
