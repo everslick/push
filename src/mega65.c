@@ -52,7 +52,7 @@ char *strchr(const char *s, char c) {
 char *strrchr(const char *s, char c) {
   const char *found = NULL, *p;
 
-  if (c == 0) return (strchr(s, 0/*'\0'*/));
+  if (c == 0) return (strchr(s, '\0'));
 
   while ((p = strchr(s, c)) != NULL) {
     found = p;
@@ -68,14 +68,14 @@ char *strtok(char *s, const char *delim) {
   char *ret, *b;
 
   if (s != NULL) buf = s;
-  if (buf[0] == 0/*'\0'*/) return (NULL);
+  if (buf[0] == '\0') return (NULL);
 
   ret = buf;
 
-  for (b = buf; *b !=0/*'\0'*/; b++) {
-    for (d = delim; *d != 0/*'\0'*/; d++) {
+  for (b = buf; *b !='\0'; b++) {
+    for (d = delim; *d != '\0'; d++) {
       if (*b == *d) {
-        *b = 0;//'\0';
+        *b = '\0';
         buf = b + 1;
 
         if (b == ret) {
