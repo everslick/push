@@ -2,9 +2,9 @@ PROGRAM  = push
 VERSION  = 0.0.2
 SOURCES  = main.c term.c lined.c cli.c parse.c
 
-export PATH=../../xemu/build/bin:../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
+export CC65_HOME=../../cc65
+export PATH=$(CC65_HOME)/bin:../../xemu/build/bin:../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
 export ZCCCFG=../../z88dk/lib/config/
-export CC65_HOME=../../cc65/
 
 DEFINES  = -DVERSION=$(VERSION)
 TARGET   = $(PROGRAM)-$(MACHINE)
