@@ -3,8 +3,8 @@ VERSION  = 0.0.2
 SOURCES  = main.c term.c lined.c cli.c parse.c
 
 export CC65_HOME=../../cc65
-export PATH=$(CC65_HOME)/bin:../../xemu/build/bin:../../zesarux/src:../../kickc/bin:../../z88dk/bin:$(shell echo $$PATH)
 export ZCCCFG=../../z88dk/lib/config/
+export PATH=$(CC65_HOME)/bin:../../xemu/build/bin:../../zesarux/src:../../kickc/bin:../../z88dk/bin:../../oscar64/bin:$(shell echo $$PATH)
 
 DEFINES  = -DVERSION=$(VERSION)
 TARGET   = $(PROGRAM)-$(MACHINE)
@@ -36,6 +36,15 @@ BIN      = $(TARGET).prg
 CFLAGS   = -a -Sc -Si -Wfragment
 DEFINES += -DKICKC -DHAVE_CONIO
 DEFINES += -DHAVE_HINTS -DHAVE_OSD
+endif
+
+ifeq ($(SDK),oscar64)
+BIN      = $(TARGET).prg
+#defines += -dHAVE_CONIO
+defines += -dHAVE_HINTS -dHAVE_OSD
+defines += -dC64 -dHAVE_FILEIO -dHAVE_SDIEC -dHAVE_PETSCII
+defines += -dNOFLOAT -dNOLONG
+defines += -dNULL=0
 endif
 
 ifeq ($(SDK),z88dk)
@@ -100,6 +109,9 @@ kickc:
 z88dk:
 	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
+oscar64:
+	oscar64 -o=$(BIN) -tf=prg -tm=$(MACHINE) $(defines) $(SOURCES)
+
 zx64:
 	$(MAKE) SDK=z88dk MACHINE=zx COLS=64 z88dk
 	chmod +x $(PROGRAM)-zx64.tap
@@ -122,6 +134,10 @@ c65:
 
 c64:
 	$(MAKE) SDK=cc65 MACHINE=c64
+	chmod +x $(PROGRAM)-c64.prg
+
+o64:
+	$(MAKE) SDK=oscar64 MACHINE=c64 oscar64
 	chmod +x $(PROGRAM)-c64.prg
 
 xe:
