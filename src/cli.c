@@ -1,9 +1,10 @@
 #include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef HAVE_FILEIO
+#if defined(HAVE_FILEIO) && !defined(OSCAR64)
 #include <unistd.h>
 #endif
 
@@ -79,21 +80,47 @@ static void missing_arg(const char *cmd) {
   printf("%s: missing argument\n", cmd);
 }
 
+#ifdef OSCAR64
+static int rename(const char *oldpath, const char *newpath) {
+  return (-1);
+}
+
+static int unlink(const char *path) {
+  return (-1);
+}
+
+static void perror(const char *s) {
+  printf("%s: unimplemented\n", s);
+}
+#endif
+
 static void cmd_help(uint8_t argc, char **argv) {
   const char *ptr = commands;
-  uint8_t cols, rows, n = 0;
+  uint8_t cols, rows, n = 1;
 
   term_screen_size(&cols, &rows);
 
   printf("available commands:\n ");
 
   while (*ptr) {
-    printf("%-10s", ptr);
+    uint8_t i, x;
+
+    printf("%s", ptr);
+    x = strlen(ptr);
+    for (i=x; i<10; i++) {
+      printf(" ");
+    }
     n += 10;
-    if (n > cols-10) printf("\n ");
-    ptr += strlen(ptr) + 1;
+    if ((n > cols-10) || (n > 60)) {
+      printf("\n ");
+      n = 1;
+    }
+    ptr += x + 1;
   }
-  if (n > cols-10) printf("\n");
+
+  if ((n > cols-10) || (n > 60)) {
+    printf("\n");
+  }
 
   printf("\n");
   printf("line editor keys ([ctrl]+[x]):\n");
@@ -105,7 +132,7 @@ static void cmd_parse(uint8_t argc, char **argv) {
   uint8_t i;
 
   for (i=0; i<argc; i++) {
-    printf("argv[%u]='%s'\n", i, argv[i]);
+    printf("argv[%d]='%s'\n", i, argv[i]);
   }
 }
 
@@ -404,7 +431,7 @@ const char *term_hint_cb(lined_t *l) {
   if (!strcmp(c, "dirname"))  return ("<path>");
   if (!strcmp(c, "mount"))    return ("[<dir>] [<dev>]");
   if (!strcmp(c, "parse"))    return ("[<arg1> <arg2> ...]");
-  if (!strcmp(c, "echo"))     return ("[<text1> <text2>] ...");
+  if (!strcmp(c, "echo"))     return ("[<text1> <text2> ...]");
   if (!strcmp(c, "sleep"))    return ("<sec>");
 
   return (NULL);
@@ -461,10 +488,10 @@ uint8_t cli_exec(char *cmd) {
     cmd_help(argc, argv);
   } else if (!strcmp(*argv, "parse")) {
     cmd_parse(argc, argv);
-  } else if (!strcmp(*argv, "test")) {
+  } else if (!strcmp(*argv, "test_")) {
     term_push_keys(input);
   } else {
-#ifndef KICKC
+#if !defined(KICKC) && !defined(OSCAR64)
     if ((argv[0][0] == '$') || (argv[0][0] == '.')) {
       argc = parse_command("ls -la $", argv, 8);
       cmd_ls(argc, argv); return (0);
@@ -477,7 +504,7 @@ uint8_t cli_exec(char *cmd) {
     }
 #endif
 
-#ifdef __CBM__
+#ifdef CC65
     if (exec(*argv, NULL) != -1) return (0);
 #endif
 
@@ -486,7 +513,7 @@ uint8_t cli_exec(char *cmd) {
 
     free(com);
 
-    printf("system returned %i\n", ret);
+    printf("system returned %d\n", ret);
 
     if (ret != -1) return (0);
 #endif

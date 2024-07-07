@@ -17,14 +17,21 @@
 
 #ifdef M65
  #include "mega65.h"
+ #include "screen.h"
+ #include "str.h"
 #endif
 
 #ifdef HAVE_CONIO
  #include <conio.h>
 #endif
 
-#ifndef COLOR_DEFAULT
- #define COLOR_DEFAULT COLOR_GRAY3
+#ifdef __OSCAR64C__
+ #include "screen.h"
+ #include "str.h"
+#endif
+
+#if defined(M65) || defined(C64)
+#define COLOR_DEFAULT COLOR_GRAY3
 #endif
 
 #include "lined.h"

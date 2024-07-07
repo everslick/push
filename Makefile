@@ -15,9 +15,13 @@ all:
 	$(MAKE) -C src zxn
 	mv src/push-zxn.tap .
 	$(MAKE) -C src clean
-	# Commodore 64
+	# Commodore 64 with cc65
 	$(MAKE) -C src c64
 	mv src/push-c64.prg .
+	$(MAKE) -C src clean
+	# Commodore 64 with oscar64
+	$(MAKE) -C src o64
+	mv src/push-o64.prg .
 	$(MAKE) -C src clean
 	# Atari 800XL
 	$(MAKE) -C src xl

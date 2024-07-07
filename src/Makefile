@@ -1,6 +1,6 @@
 PROGRAM  = push
 VERSION  = 0.0.2
-SOURCES  = main.c term.c lined.c cli.c parse.c
+SOURCES  = main.c term.c lined.c cli.c parse.c screen.c
 
 export CC65_HOME=../../cc65
 export ZCCCFG=../../z88dk/lib/config/
@@ -39,12 +39,12 @@ DEFINES += -DHAVE_HINTS -DHAVE_OSD
 endif
 
 ifeq ($(SDK),oscar64)
-BIN      = $(TARGET).prg
-#defines += -dHAVE_CONIO
-defines += -dHAVE_HINTS -dHAVE_OSD
-defines += -dC64 -dHAVE_FILEIO -dHAVE_SDIEC -dHAVE_PETSCII
-defines += -dNOFLOAT -dNOLONG
-defines += -dNULL=0
+BIN      = $(PROGRAM)-o64.prg
+DEFINES += -DHAVE_CONIO
+DEFINES += -DHAVE_HINTS -DHAVE_OSD
+DEFINES += -DOSCAR64 -DNOFLOAT -DNOLONG
+CFLAGS   = -i=../../oscar64/include/$(MACHINE) -psci
+SOURCES += str.c
 endif
 
 ifeq ($(SDK),z88dk)
@@ -58,12 +58,11 @@ endif
 
 ifeq ($(MACHINE),m65)
 DEFINES += -DM65 -DHAVE_PETSCII
-SOURCES += mega65.c
+SOURCES += mega65.c str.c
 endif
 
 ifeq ($(MACHINE),c64)
-DEFINES += -DC64 -DHAVE_FILEIO -DHAVE_SDIEC -DHAVE_PETSCII
-SOURCES += sdiec.c
+DEFINES += -DC64 -DHAVE_PETSCII
 endif
 
 ifeq ($(MACHINE),atari)
@@ -92,6 +91,11 @@ CFLAGS  += -lesxdos -O3 -clib=classic
 SOURCES += zxnext.c esxdos.c
 endif
 
+ifeq ($(SDIEC),1)
+DEFINES += -DHAVE_SDIEC -DHAVE_FILEIO
+SOURCES += sdiec.c
+endif
+
 DEFINES += -DTOOLCHAIN=$(SDK) -DMACHINE=$(MACHINE)
 
 ########################################
@@ -110,7 +114,7 @@ z88dk:
 	zcc +$(MACHINE) $(CFLAGS) $(DEFINES) -o $(BIN) $(SOURCES)
 
 oscar64:
-	oscar64 -o=$(BIN) -tf=prg -tm=$(MACHINE) $(defines) $(SOURCES)
+	oscar64 -o=$(BIN) -tf=prg -tm=$(MACHINE) $(DEFINES) $(CFLAGS) $(SOURCES)
 
 zx64:
 	$(MAKE) SDK=z88dk MACHINE=zx COLS=64 z88dk
@@ -133,12 +137,12 @@ c65:
 	chmod +x $(PROGRAM)-m65.prg
 
 c64:
-	$(MAKE) SDK=cc65 MACHINE=c64
+	$(MAKE) SDK=cc65 MACHINE=c64 SDIEC=1
 	chmod +x $(PROGRAM)-c64.prg
 
 o64:
 	$(MAKE) SDK=oscar64 MACHINE=c64 oscar64
-	chmod +x $(PROGRAM)-c64.prg
+	chmod +x $(PROGRAM)-o64.prg
 
 xe:
 	$(MAKE) SDK=cc65 MACHINE=atari
@@ -150,6 +154,9 @@ xl:
 
 c64emu: c64
 	x64 $(PROGRAM)-c64.prg
+
+o64emu: o64
+	x64 $(PROGRAM)-o64.prg
 
 m65emu: m65
 	xmega65.native -besure -prg $(PROGRAM)-m65.prg
@@ -182,7 +189,7 @@ $(TARGET): $(SOURCES:.c=.o)
 	$(CC) $(LDFLAGS) -o $(BIN) $^
 
 clean:
-	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf push-zx32 push-zx64
+	$(RM) *.o *.d *.map *.mem *.asm *.dbg *.vs *.klog *.bin *.vsf *.int *.lbl push-zx32 push-zx64
 
 distclean: clean
 	$(RM) $(BIN) *.prg *.tap push-*

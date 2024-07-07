@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,6 +37,8 @@ loop:
 #endif
 
   term_init();
+
+  term_clear_screen();
 
   if (!(lined = lined_init())) {
     printf("push: out of memory\n"); return (1);

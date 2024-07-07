@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -101,22 +102,6 @@ void term_init(void) {
 #ifdef POSIX
   posix_init();
 #endif
-
-#ifdef M65
-  togglecase();
-#endif
-
-  bordercolor(COLOR_BLACK);
-  bgcolor(COLOR_BLACK);
-  textcolor(COLOR_DEFAULT);
-
-#ifdef HAVE_SWCURSOR
-  cursor(0);
-#else
-  cursor(1);
-#endif
-
-  clrscr();
 }
 
 void term_fini(void) {
@@ -127,6 +112,20 @@ void term_fini(void) {
 
 void term_clear_screen(void) {
   clrscr();
+ 
+  bordercolor(COLOR_BLACK);
+  bgcolor(COLOR_BLACK);
+  textcolor(COLOR_DEFAULT);
+
+#ifdef HAVE_SWCURSOR
+  cursor(0);
+#else
+  cursor(1);
+#endif
+
+#if defined(M65) || defined(OSCAR64)
+  togglecase();
+#endif
 }
 
 void term_screen_size(uint8_t *cols, uint8_t *rows) {
